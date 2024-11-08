@@ -5,21 +5,17 @@ void read_domains(const char* filename, std::vector<std::string>& domain_list) {
     std::string line;
 
     if (!file.is_open()) {
-        std::cerr << "Không thể mở file: " << filename << std::endl;
+        std::cerr << "Cannot load BlackList: " << filename << std::endl;
         return;
     }
 
     while (std::getline(file, line)) {
-        // Loại bỏ các khoảng trắng đầu và cuối chuỗi (nếu cần)
-        line.erase(0, line.find_first_not_of(" \t\n\r\f\v")); // Xóa khoảng trắng đầu
-        line.erase(line.find_last_not_of(" \t\n\r\f\v") + 1); // Xóa khoảng trắng cuối
+        line.erase(0, line.find_first_not_of(" \t\n\r\f\v")); 
+        line.erase(line.find_last_not_of(" \t\n\r\f\v") + 1);
 
-        // Bỏ qua các dòng trống
         if (line.empty()) {
             continue;
         }
-
-        // Thêm domain vào danh sách
         domain_list.push_back(line);
     }
 

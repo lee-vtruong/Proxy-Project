@@ -1,5 +1,6 @@
 #include "../include/domain_process.h"
 #include "../include/http_parser.h"
+#include "../include/cross_platform.h"
 
 #define BUFFER_SIZE 65536
 #define PORT 8080
