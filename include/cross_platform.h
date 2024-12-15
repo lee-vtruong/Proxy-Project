@@ -1,41 +1,70 @@
-#ifndef CROSS_PLATFORM_PROXY_H
-#define CROSS_PLATFORM_PROXY_H
+#ifndef CROSS_PLATFORM_H
+#define CROSS_PLATFORM_H
+
+#include "common_lib.h"
 
 #if defined(_WIN32) || defined(_WIN64)
-    #include <winsock2.h>
-    #include <ws2tcpip.h> // cho ipv6
-    #define CLOSE_SOCKET(s) closesocket(s)
-    #define SOCKET_ERROR_VALUE SOCKET_ERROR
+    #define IS_WINDOWS 1
 #else
+    #define IS_WINDOWS 0
+#endif
+
+#if IS_WINDOWS
+    // Include Windows-specific headers
+    #include <winsock2.h>
+    #include <ws2tcpip.h>
+    // #pragma comment(lib, "ws2_32.lib")
+    
+    // Type and macro definitions for Windows
+    typedef SOCKET socket_t;
+    #define SOCKET_ERROR_CODE WSAGetLastError()
+    #define CLOSE_SOCKET closesocket
+    #define INIT_SOCKET() do { \
+        WSADATA wsaData; \
+        if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) { \
+            fprintf(stderr, "WSAStartup failed: %d\n", WSAGetLastError()); \
+            exit(EXIT_FAILURE); \
+        } \
+    } while (0)
+    #define CLEANUP_SOCKET() WSACleanup()
+    #define SETSOCKOPT(s, level, optname, optval, optlen) \
+        setsockopt(s, level, optname, (const char*)(optval), optlen)
+
+#else
+    // Include Linux-specific headers
+    #include <sys/types.h>
     #include <sys/socket.h>
     #include <netinet/in.h>
     #include <arpa/inet.h>
+    #include <unistd.h>
     #include <netdb.h>
-    #include <unistd.h> 
-    #define CLOSE_SOCKET(s) close(s)
-    #define SOCKET_ERROR_VALUE -1
+    #include <errno.h>
+    
+    // Type and macro definitions for Linux
+    typedef int socket_t;
+    #define SOCKET_ERROR_CODE errno
+    #define CLOSE_SOCKET close
+    #define INIT_SOCKET() (void)0
+    #define CLEANUP_SOCKET() (void)0
+    #define SETSOCKOPT(s, level, optname, optval, optlen) \
+        setsockopt(s, level, optname, optval, optlen)
 #endif
 
-int socket_initialize();
-void socket_cleanup();
-
-#if defined(_WIN32) || defined(_WIN64)
-int socket_initialize() {
-    WSADATA wsaData;
-    return WSAStartup(MAKEWORD(2, 2), &wsaData); 
-}
-
-void socket_cleanup() {
-    WSACleanup(); 
-}
+// Inline function for error handling
+static inline void print_socket_error(const char *msg) {
+#if IS_WINDOWS
+    fprintf(stderr, "%s: %d\n", msg, SOCKET_ERROR_CODE);
 #else
-int socket_initialize() {
-    return 0;
+    perror(msg);
+#endif
 }
 
-void socket_cleanup() {
-    return;
-}
-#endif
+// Optional: define macros for common socket functions
+#define SOCKET_SEND send
+#define SOCKET_RECV recv
+#define SOCKET_BIND bind
+#define SOCKET_LISTEN listen
+#define SOCKET_ACCEPT accept
+#define INVALID_SOCKET ((socket_t)-1)
 
-#endif
+#endif // CROSS_PLATFORM_H

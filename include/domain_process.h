@@ -3,7 +3,19 @@
 
 #include "common_lib.h"
 
-void read_domains(const char* filename, std::vector<std::string>& domain_list);
-bool is_blocked_url(std::string url, std::vector<std::string> BLOCKED_DOMAIN);
+struct FilterList {
+    std::unordered_set<std::string> domains; 
+    std::unordered_set<std::string> ips;     
 
+    void addDomain(const std::string& domain);
+
+    void addIP(const std::string& ip);
+
+    bool isBlocked(const std::string& entry) const;
+};
+
+bool loadListFromFile(const char*  filePath, std::unordered_set<std::string>& list);
+void isBlocked(const std::string& entry, const FilterList& filterList);
+FilterList initFilterList(const char* domainFile, const char* ipFile);
+    
 #endif
