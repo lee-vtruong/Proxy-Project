@@ -11,7 +11,7 @@
 
 #if IS_WINDOWS
     // Include Windows-specific headers
-    #include <winsock2.h>
+    #include "netinc.h"
     #include <ws2tcpip.h>
     // #pragma comment(lib, "ws2_32.lib")
     

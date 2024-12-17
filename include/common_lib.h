@@ -21,4 +21,12 @@
 #include <unordered_set>
 #include <vector>
 
+// Kích thước bộ đệm
+#define BUFFER_SIZE 65536
+// Cổng mặc định
+#define LISTEN_PORT 8080
+// Số kết nối tối đa
+#define MAX_CONNECTIONS 100
+// #define blockedDomainsFile "asset/blocked_domains.txt"
+// #define blockedIPsFile "asset/blocked_ip.txt"
 #endif
