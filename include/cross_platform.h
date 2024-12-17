@@ -10,43 +10,47 @@
 #endif
 
 #if IS_WINDOWS
+    // Include Windows-specific headers
     #include <winsock2.h>
     #include <ws2tcpip.h>
-    #pragma comment(lib, "ws2_32.lib")
+    // #pragma comment(lib, "ws2_32.lib")
+    
+    // Type and macro definitions for Windows
+    typedef SOCKET socket_t;
+    #define SOCKET_ERROR_CODE WSAGetLastError()
+    #define CLOSE_SOCKET closesocket
+    #define INIT_SOCKET() do { \
+        WSADATA wsaData; \
+        if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) { \
+            fprintf(stderr, "WSAStartup failed: %d\n", WSAGetLastError()); \
+            exit(EXIT_FAILURE); \
+        } \
+    } while (0)
+    #define CLEANUP_SOCKET() WSACleanup()
+    #define SETSOCKOPT(s, level, optname, optval, optlen) \
+        setsockopt(s, level, optname, (const char*)(optval), optlen)
+
 #else
+    // Include Linux-specific headers
     #include <sys/types.h>
     #include <sys/socket.h>
-    #include <net/ethernet.h>
     #include <netinet/in.h>
-    #include <netinet/ip.h>
-    #include <netinet/tcp.h>
     #include <arpa/inet.h>
     #include <unistd.h>
     #include <netdb.h>
     #include <errno.h>
-#endif
-
-#if IS_WINDOWS
-    typedef SOCKET socket_t;
-    #define SOCKET_ERROR_CODE WSAGetLastError()
-    #define CLOSE_SOCKET closesocket
-    #define INIT_SOCKET()                    
-        do {                                
-            WSADATA wsaData;                
-            if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-                fprintf(stderr, "WSAStartup failed.\n");
-                exit(EXIT_FAILURE);         
-            }                               
-        } while (0)
-    #define CLEANUP_SOCKET() WSACleanup()
-#else
+    
+    // Type and macro definitions for Linux
     typedef int socket_t;
     #define SOCKET_ERROR_CODE errno
     #define CLOSE_SOCKET close
     #define INIT_SOCKET() (void)0
     #define CLEANUP_SOCKET() (void)0
+    #define SETSOCKOPT(s, level, optname, optval, optlen) \
+        setsockopt(s, level, optname, optval, optlen)
 #endif
 
+// Inline function for error handling
 static inline void print_socket_error(const char *msg) {
 #if IS_WINDOWS
     fprintf(stderr, "%s: %d\n", msg, SOCKET_ERROR_CODE);
@@ -55,4 +59,12 @@ static inline void print_socket_error(const char *msg) {
 #endif
 }
 
-#endif
+// Optional: define macros for common socket functions
+#define SOCKET_SEND send
+#define SOCKET_RECV recv
+#define SOCKET_BIND bind
+#define SOCKET_LISTEN listen
+#define SOCKET_ACCEPT accept
+#define INVALID_SOCKET ((socket_t)-1)
+
+#endif // CROSS_PLATFORM_H
