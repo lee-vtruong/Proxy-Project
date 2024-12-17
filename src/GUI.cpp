@@ -1,112 +1,53 @@
+
+#include "../include/GUI.h"
 #define RAYGUI_IMPLEMENTATION
 
-#include "../include/raygui.h"
-#include "../include/raylib.h"
-#include "../include/http_parser.h"
+#include "raylib.h"
+#include <sstream>
+#include <string>
+#include <vector>
+// #include "GUI.h" // Include lớp Popup và TextBox
+int main() {
+    // Khởi tạo cửa sổ raylib
+    InitWindow(800, 600, "Table Example");
+    SetTargetFPS(60);
 
-class MessageRecord {
-    private:
-        std::vector<ConnectionInfo> messages;
-        Rectangle recordRect = {};
-        int scrollIndex = 0;
-        int selectedRow = -1;
-        bool showDetails = false;
-        int VISIBLE_ROWS = 7;
-        int ROW_HEIGHT = 20;
-        Font FONT;
-        Color TEXT_COLOR;
-        Color BG_COLOR;
-        Rectangle scrollBar;
+    // Tạo dữ liệu ConnectionInfo
+    std::vector<ConnectionInfo> connections;
+    for (int i = 0; i < 50; i++) {
+        ConnectionInfo connection;
+        snprintf(connection.client.ip, INET_ADDRSTRLEN, "192.168.1.%d", i);
+        connection.client.port = 1000 + i;
+        snprintf(connection.server.ip, INET_ADDRSTRLEN, "10.0.0.%d", i);
+        connection.server.port = 80;
+        HttpRequest request = { "", "GET", "/index.html", "HTTP/1.1", {{"Host", "example.com"}}, "", false };
+        HttpResponse response = { "", "HTTP/1.1", 200, "OK", {{"Content-Type", "text/html"}}, "<html>...</html>", false };
+        connection.addTransaction(request, response);
+        connections.push_back(connection);
+    }
+    Font Roboto = LoadFont("asset/Roboto.ttf");
+    // Tạo bảng
+    Table table(50, 50, 700, 500, connections, Roboto);
 
-    public:
-        MessageRecord(Rectangle rect) {
-            recordRect = rect;
-            scrollBar = {760, 50, 20, float(VISIBLE_ROWS * ROW_HEIGHT)};
-            scrollIndex = GuiScrollBar(scrollBar, scrollIndex, 0, 1);
+    // Vòng lặp chính
+    while (!WindowShouldClose()) {
+    Vector2 mousePosition = GetMousePosition();
 
-        }
-        MessageRecord() {
-            recordRect = {10, 50, 100, 20};
-        }
+    // Cập nhật bảng
+    table.Update(mousePosition);
 
-        void handle() {
-            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                Vector2 mousePos = GetMousePosition();
-                for (int i = 0; i < VISIBLE_ROWS; i++) {
-                    Rectangle rowRect = {10, 50 + i * ROW_HEIGHT, 740, ROW_HEIGHT};
-                    if (CheckCollisionPointRec(mousePos, rowRect)) {
-                        selectedRow = scrollIndex + i;  // Lấy hàng tương ứng
-                        showDetails = true;
-                        break;
-                    }
-                }
-            }
-            scrollIndex = GuiScrollBar(scrollBar, scrollIndex, 0, messages.size() - VISIBLE_ROWS);
-        }
 
-        void draw() {
-            BeginDrawing();
-            ClearBackground(RAYWHITE);
-            DrawText("HTTP Messages Table", 10, 10, 20, BLACK);
-            GuiLabel((Rectangle){10, 30, 100, 20}, "Method");
-            GuiLabel((Rectangle){120, 30, 150, 20}, "IP Source");
-            GuiLabel((Rectangle){280, 30, 150, 20}, "IP Dest");
-            GuiLabel((Rectangle){440, 30, 250, 20}, "URL");
-            GuiLabel((Rectangle){700, 30, 80, 20}, "Resp.");
-            for (int i = 0; i < VISIBLE_ROWS; i++) {
-                int messageIndex = scrollIndex + i;  // Lấy dữ liệu của hàng
-                if (messageIndex >= messages.size()) break;
-                Rectangle rowRect = {10, 50 + i * ROW_HEIGHT, 740, ROW_HEIGHT};
-                if (messageIndex == selectedRow) {
-                    DrawRectangleRec(rowRect, LIGHTGRAY);
-                }
+        // Vẽ giao diện
+        BeginDrawing();
+        ClearBackground(RAYWHITE);
 
-                GuiLabel((Rectangle){10, 50 + i * ROW_HEIGHT, 100, 20}, messages[messageIndex].transactions[0].request.method.c_str()); 
-                GuiLabel((Rectangle){120, 50 + i * ROW_HEIGHT, 150, 20}, messages[messageIndex].client.ip);
-                GuiLabel((Rectangle){280, 50 + i * ROW_HEIGHT, 150, 20}, messages[messageIndex].server.ip);
-                GuiLabel((Rectangle){440, 50 + i * ROW_HEIGHT, 250, 20}, messages[messageIndex].transactions[0].request.uri.c_str());
-                GuiLabel((Rectangle){700, 50 + i * ROW_HEIGHT, 80, 20}, std::to_string(messages[messageIndex].transactions[0].response.statusCode).c_str());
-            }
+        table.Draw();
 
-            DrawRectangleRec(recordRect, Fade(GRAY, 0.6f));
+        EndDrawing();
+    }
 
-            if (showDetails && selectedRow != -1) {
-                ConnectionInfo connection = messages[selectedRow];
-                DrawRectangle(10, 50, 740, 20, Fade(GRAY, 0.6f));
-                DrawRectangleLines(10, 50, 740, 20, Fade(DARKGRAY, 0.6f));
+    // Đóng cửa sổ
+    CloseWindow();
 
-                DrawText("Connection Details", 20, 60, 20, BLACK);
-                DrawText(TextFormat("Method: %s", connection.transactions[0].request.method.c_str()), 20, 100, 18, BLACK);
-                DrawText(TextFormat("URL: %s", connection.transactions[0].request.uri.c_str()), 20, 120, 18, BLACK);
-                DrawText(TextFormat("IP Source: %s", connection.client.ip), 20, 140, 18, BLACK);
-                DrawText(TextFormat("IP Dest: %s", connection.server.ip), 20, 160, 18, BLACK);
-                DrawText(TextFormat("Response Code: %d", connection.transactions[0].response.statusCode), 20, 180, 18, BLACK);
-                if (connection.transactions[0].request.isEncrypted) {
-                    DrawText("Encrypted: Yes", 20, 200, 18, BLACK);
-                } else {
-                    DrawText("Encrypted: No", 20, 200, 18, BLACK);
-                }
-                if (GuiButton((Rectangle){20, 220, 100, 30}, "Close")) {
-                    showDetails = false;
-                    selectedRow = -1;
-                }
-            }
-
-            EndDrawing();
-        }
-};
-
-class Application {
-    private:
-        float HEIGHT = 900.f, WIDTH = 1600.f;
-        MessageRecord messageRecord;
-
-    public:
-        void InitApp() {
-            InitWindow(WIDTH, HEIGHT, "Proxy Server");
-            SetTargetFPS(60);
-            messageRecord = MessageRecord({10, 50, 740, 400});
-            
-
-        }
-};
+    return 0;
+}

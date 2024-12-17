@@ -57,6 +57,8 @@ bool isValidHttpVersion(const std::string version);
 void trimNewlineChars(std::string& str);
 HttpRequest parseHttpRequest(const std::string& rawMessage);
 HttpResponse parseHttpResponse(const std::string& rawMessage);
+std::string ConnectionInfoToString(const ConnectionInfo& connection);
+
 
 void log_request(HttpRequest request, FILE* f = stderr);
 void log_response(HttpResponse response , FILE* f = stderr);

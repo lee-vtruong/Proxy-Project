@@ -182,3 +182,21 @@ bool isValidHttpVersion(const std::string version) {
     const std::regex versionPattern(R"(HTTP\/([1-3](\.\d)?))");
     return std::regex_match(version, versionPattern);
 }
+
+std::string ConnectionInfoToString(const ConnectionInfo& connection) {
+    std::ostringstream oss;
+    oss << "Client IP: " << connection.client.ip << ":" << connection.client.port << "\n";
+    oss << "Server IP: " << connection.server.ip << ":" << connection.server.port << "\n\n";
+
+    for (size_t i = 0; i < connection.transactions.size(); ++i) {
+        const Transaction& transaction = connection.transactions[i];
+        oss << "Transaction " << i + 1 << ":\n";
+        oss << "  Request Method: " << transaction.request.method << "\n";
+        oss << "  Request URI: " << transaction.request.uri << "\n";
+        oss << "  Request HTTP Version: " << transaction.request.httpVersion << "\n\n";
+        oss << "  Response Status Code: " << transaction.response.statusCode << "\n";
+        oss << "  Response Reason: " << transaction.response.reasonPhrase << "\n\n";
+    }
+
+    return oss.str();
+}

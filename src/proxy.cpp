@@ -10,7 +10,7 @@
 // Số kết nối tối đa
 #define MAX_CONNECTIONS 100
 
-static socket_t server_fd_global = INVALID_SOCKET;
+static socket_t server_fd_global = -1;
 
 // Danh sách các kết nối
 std::vector<ConnectionInfo> connections;
@@ -23,7 +23,7 @@ bool running = true;
 void signalHandler(int signal) {
     std::cout << "\nReceived signal: " << signal << ", shutting down..." << std::endl;
     running = false;
-    if (server_fd_global != INVALID_SOCKET ) {
+    if (server_fd_global != -1) {
         CLOSE_SOCKET(server_fd_global);
     }
 }
@@ -55,7 +55,7 @@ private:
         }
 
         int opt = 1;
-        SETSOCKOPT(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+        setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
         server_fd_global = server_fd;
 
