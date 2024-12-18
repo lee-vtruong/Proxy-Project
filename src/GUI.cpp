@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include "../include/proxy.h"
 
 // // #include "GUI.h" // Include lớp Popup và TextBox
 // int main() {
@@ -150,7 +151,7 @@
 
 
 int main() {
-    InitWindow(800, 600, "Name List Manager");
+    InitWindow(1600, 900, "Name List Manager");
 
     // Load font tùy chỉnh
     Font customFont = LoadFont("asset/Roboto.ttf");
@@ -165,13 +166,43 @@ int main() {
     }
     File.close();
 
+        // Tạo dữ liệu ConnectionInfo
+    std::vector<ConnectionInfo> connections;
+    for (int i = 0; i < 50; i++) {
+        ConnectionInfo connection;
+        snprintf(connection.client.ip, INET_ADDRSTRLEN, "192.168.1.%d", i);
+        connection.client.port = 1000 + i;
+        snprintf(connection.server.ip, INET_ADDRSTRLEN, "10.0.0.%d", i);
+        connection.server.port = 80;
+        HttpRequest request = { "", "GET", "/index.html", "HTTP/1.1", {{"Host", "example.com"}}, "", false };
+        HttpResponse response = { "", "HTTP/1.1", 200, "OK", {{"Content-Type", "text/html"}}, "<html>...</html>", false };
+        connection.addTransaction(request, response);
+        connections.push_back(connection);
+    }
+    Proxy hehe(8080);
+    hehe.start();
     // Tạo NameList
-    NameList nameList(FilePath, 200, 100, 400, 200, nameSet, customFont);
+    Table table(50, 200, 800, 500, connections, customFont);
+    NameList nameList(FilePath, 950, 350, 600, 200, hehe.BLACK_LIST.domains, customFont, "Blocked Domain List");
+    NameList nameList1(FilePath, 950, 125, 600, 200, hehe.BLACK_LIST.ips, customFont, "Blocked IP List");
+    InputFieldWithButton inputFieldWithButton(150, 125, 100, 50, "Change Port", 300, 125, 150, 50, customFont);
+    inputFieldWithButton.SetText(std::to_string(hehe.getPort()));
+    ToggleButton toggleButton(550, 125, 200, 50, "Start Proxy", "Stop Proxy", 20, 10.0f, customFont, GREEN, LIGHTGRAY, DARKGRAY, WHITE);
 
     SetTargetFPS(60);
     while (!WindowShouldClose()) {
-        // Update
+        // // Update
         nameList.Update();
+        nameList1.Update();
+        inputFieldWithButton.Update();
+        toggleButton.Update();
+        table.Update(GetMousePosition());
+        
+        // if (toggleButton.GetState()) {
+            hehe.acceptConnections();
+        // } else {
+        //     hehe.stop();
+        // }
 
         // Draw
         BeginDrawing();
@@ -179,6 +210,10 @@ int main() {
 
         DrawTextEx(customFont, "Right-click to delete a name", {220, 70}, 20, 1, GRAY);
         nameList.Draw();
+        nameList1.Draw();
+        inputFieldWithButton.Draw();
+        toggleButton.Draw();
+        table.Draw();
 
         EndDrawing();
     }

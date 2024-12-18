@@ -46,6 +46,8 @@ private:
     socket_t server_fd;
     sockaddr_in server_addr;
     FilterList black_list;
+
+    
     //BLOCKING DOMAIN
 
     void setupServerSocket() {
@@ -91,6 +93,7 @@ private:
             }
 
             std::thread(&Proxy::handleClient, this, client_fd, client_addr).detach();
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
 
         CLOSE_SOCKET(server_fd);
@@ -144,7 +147,6 @@ private:
                         "Content-Type: text/html; charset=UTF-8\r\n"
                         "Content-Length: 123\r\n"
                         "Server: Apache/2.4.41 (Ubuntu)\r\n"
-                        "Date: Mon, 07 Nov 2024 12:34:56 GMT\r\n"
                         "\r\n"
                         "<!DOCTYPE html>\n"
                         "<html>\n"

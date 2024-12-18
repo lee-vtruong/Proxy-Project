@@ -13,8 +13,8 @@ else
     LDFLAGS = -Llib -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
     RM = rm -f
     EXE =
-	# SRC = src/GUI.cpp src/http_parser.cpp
-	SRC = src/main.cpp
+	SRC = src/GUI.cpp src/http_parser.cpp src/domain_process.cpp
+	# SRC = src/main.cpp
 	# SRC = src/domain_process.cpp src/http_parser.cpp src/proxy.cpp
 endif
 

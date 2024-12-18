@@ -491,7 +491,7 @@ public:
             if (currentTime - lastClickTime < 0.3) { // Nhấp đúp
                 if (detailPopup == nullptr) {
                     std::string connectionDetails = ConnectionInfoToString(data[selectedRow]);
-                    detailPopup = new Popup(200, 150, 400, 300, "Connection Details", connectionDetails, font);
+                    detailPopup = new Popup(bounds.x + bounds.width / 2 - 250, bounds.y + bounds.height / 2 - 150, 500, 300, "Connection Details", connectionDetails, font);
                 }
             }
             lastClickTime = currentTime;
@@ -499,24 +499,34 @@ public:
 
         // Đóng popup nếu nhấp ra ngoài popup
         if (detailPopup && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-            if (!CheckCollisionPointRec(mousePosition, bounds)) {
+            if (!CheckCollisionPointRec(mousePosition, bounds) && !CheckCollisionPointRec(mousePosition, detailPopup->GetBounds())) {
                 delete detailPopup;
                 detailPopup = nullptr;
             }
         }
     }
 
-
     // Vẽ bảng lên màn hình
     void Draw() {
         // Vẽ nền bảng
-        DrawRectangle(bounds.x, bounds.y, bounds.width, bounds.height, LIGHTGRAY);
+        DrawRectangleRounded(bounds, 0.01, 10, LIGHTGRAY);
+        DrawRectangleRoundedLinesEx(bounds, 0.01, 10, 2, DARKGRAY);
+
+        // Vẽ tiêu đề các cột
+        float columnX[] = { bounds.x + 10, bounds.x + 120, bounds.x + 300, bounds.x + 500 };
+        float headerY = bounds.y; // Vị trí Y của tiêu đề
+
+        DrawRectangle(bounds.x, headerY, bounds.width, rowHeight, DARKGRAY); // Nền tiêu đề
+        DrawTextEx(font, "Method", { columnX[0], headerY + 5 }, fontSize, 1, WHITE);
+        DrawTextEx(font, "IP Source", { columnX[1], headerY + 5 }, fontSize, 1, WHITE);
+        DrawTextEx(font, "IP Remote", { columnX[2], headerY + 5 }, fontSize, 1, WHITE);
+        DrawTextEx(font, "URL", { columnX[3], headerY + 5 }, fontSize, 1, WHITE);
 
         // Bắt đầu vùng cắt
-        BeginScissorMode(bounds.x, bounds.y, bounds.width, bounds.height);
+        BeginScissorMode(bounds.x, bounds.y + rowHeight, bounds.width, bounds.height - rowHeight);
 
-        // Vẽ các hàng
-        float y = bounds.y - scrollOffset;
+        // Vẽ các hàng dữ liệu
+        float y = bounds.y + rowHeight - scrollOffset; // Dòng đầu tiên dưới tiêu đề
         for (size_t i = 0; i < data.size(); ++i) {
             bool isHovered = CheckCollisionPointRec(GetMousePosition(), { bounds.x, y, bounds.width, rowHeight });
             bool isSelected = (selectedRow == i);
@@ -528,11 +538,11 @@ public:
         EndScissorMode();
 
         // Vẽ thanh cuộn
-        float maxScroll = std::max(0.0f, data.size() * rowHeight - bounds.height);
+        float maxScroll = std::max(0.0f, data.size() * rowHeight - (bounds.height - rowHeight));
         if (maxScroll > 0) {
-            float scrollBarHeight = bounds.height * bounds.height / (data.size() * rowHeight);
-            float scrollBarY = bounds.y + (bounds.height - scrollBarHeight) * (scrollOffset / maxScroll);
-            DrawRectangle(bounds.x + bounds.width - 5, bounds.y, 5, bounds.height, DARKGRAY); // Nền thanh cuộn
+            float scrollBarHeight = (bounds.height - rowHeight) * (bounds.height - rowHeight) / (data.size() * rowHeight);
+            float scrollBarY = bounds.y + rowHeight + ((bounds.height - rowHeight - scrollBarHeight) * (scrollOffset / maxScroll));
+            DrawRectangle(bounds.x + bounds.width - 5, bounds.y + rowHeight, 5, bounds.height - rowHeight, DARKGRAY); // Nền thanh cuộn
             DrawRectangle(bounds.x + bounds.width - 5, scrollBarY, 5, scrollBarHeight, BLACK); // Thanh cuộn
         }
 
@@ -707,7 +717,12 @@ public:
     void clear() {
         inputField.SetText("");
     }
+
+    void SetText(const std::string& newText) {
+        inputField.SetText(newText);
+    }
 };
+
 
 class NameList {
 private:
@@ -725,19 +740,22 @@ private:
     float scrollOffset; // Biến để xử lý scrolling
     const float rowHeight = 30; // Chiều cao cố định cho mỗi dòng
     int visibleRows; // Số hàng hiển thị tối đa trong khung
+    std::string title; // Tiêu đề của bảng
 
 public:
-    // Constructor
-    NameList(std::string filename, float x, float y, float width, float height, std::unordered_set<std::string>& names, Font customFont)
+    // Constructor (thêm tham số title cho tiêu đề)
+    NameList(std::string filename, float x, float y, float width, float height, 
+             std::unordered_set<std::string>& names, Font customFont, const std::string& titleText)
         : fileName(filename), listBounds{x, y, width, height - 50}, nameSet(names), font(customFont),
           inputFieldWithButton(x + 10, y + height - 40, width - 120, 30, "Add", x + width - 100, y + height - 40, 90, 30, customFont),
-          showContextMenu(false), contextMenuPosition{0, 0}, selectedNameIndex(-1), scrollOffset(0.0f) {
+          showContextMenu(false), contextMenuPosition{0, 0}, selectedNameIndex(-1), scrollOffset(0.0f), title(titleText) {
         UpdateNameVector();
         visibleRows = static_cast<int>((listBounds.height) / rowHeight);
     }
 
     // Cập nhật logic
     void Update() {
+        UpdateNameVector();
         Vector2 mousePoint = GetMousePosition();
 
         // Xử lý cuộn chuột
@@ -746,6 +764,9 @@ public:
             scrollOffset -= wheel * rowHeight;
             scrollOffset = Clamp(scrollOffset, 0.0f, std::max(0.0f, rowHeight * (nameVector.size() - visibleRows)));
         }
+
+        // Xử lý thanh cuộn kéo
+        HandleScrollBar(mousePoint);
 
         // Xử lý input text field
         inputFieldWithButton.Update();
@@ -761,6 +782,27 @@ public:
 
         // Xử lý context menu
         HandleContextMenu(mousePoint);
+    }
+
+    // Xử lý cuộn chuột và kéo thanh cuộn
+    void HandleScrollBar(Vector2 mousePoint) {
+        if (nameVector.size() <= visibleRows) return;
+        float maxScroll = std::max(0.0f, rowHeight * (nameVector.size() - visibleRows));
+
+        // Xử lý kéo thanh cuộn
+        float scrollBarHeight = (listBounds.height * visibleRows) / nameVector.size();
+        Rectangle scrollBar = { listBounds.x + listBounds.width - 10, listBounds.y + (scrollOffset / maxScroll) * (listBounds.height - scrollBarHeight), 10, scrollBarHeight };
+
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && CheckCollisionPointRec(mousePoint, scrollBar)) {
+            float dragStartY = mousePoint.y;
+            while (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
+                float deltaY = mousePoint.y - dragStartY;
+                dragStartY = mousePoint.y;
+
+                scrollOffset += deltaY * maxScroll / (listBounds.height - scrollBarHeight);
+                scrollOffset = Clamp(scrollOffset, 0.0f, maxScroll);
+            }
+        }
     }
 
     // Xử lý menu chuột phải
@@ -801,31 +843,38 @@ public:
         DrawRectangleRounded(listBounds, 0.01, 10, LIGHTGRAY);
         DrawRectangleRoundedLinesEx(listBounds, 0.01, 10, 2, DARKGRAY);
 
-        // Vùng cắt để giới hạn vẽ trong khung
-        BeginScissorMode(listBounds.x, listBounds.y, listBounds.width, listBounds.height);
+        // Vẽ tiêu đề
+        DrawRectangle(listBounds.x, listBounds.y, listBounds.width, rowHeight, DARKGRAY); // Nền tiêu đề
+        DrawTextEx(font, title.c_str(), {listBounds.x + 10, listBounds.y + 5}, 20, 1, WHITE);
 
+        // Vùng cắt để giới hạn vẽ trong khung
+        BeginScissorMode(listBounds.x, listBounds.y + rowHeight, listBounds.width, listBounds.height - rowHeight);
+
+        // Vẽ các hàng dữ liệu
+        float yPosition = listBounds.y + rowHeight - scrollOffset;
         for (int i = 0; i < visibleRows; i++) {
             int index = i + static_cast<int>(scrollOffset / rowHeight);
             if (index >= nameVector.size()) break;
 
-            float yPosition = listBounds.y + i * rowHeight;
             Rectangle nameBounds = {listBounds.x, yPosition, listBounds.width, rowHeight};
             Color hoverColor = CheckCollisionPointRec(GetMousePosition(), nameBounds) ? DARKGRAY : WHITE;
 
             DrawRectangleRec(nameBounds, hoverColor);
             DrawTextEx(font, nameVector[index].c_str(), {nameBounds.x + 10, yPosition + 5}, 20, 1, BLACK);
+            yPosition += rowHeight;
+        }
+
+        if (nameVector.size() > visibleRows) {
+            float maxScroll = rowHeight * (nameVector.size() - visibleRows);
+            float scrollBarHeight = (listBounds.height - rowHeight) * visibleRows / nameVector.size();
+            float scrollBarY = listBounds.y + rowHeight + (scrollOffset / maxScroll) * (listBounds.height - rowHeight - scrollBarHeight);
+
+            // Vẽ thanh cuộn nền và phần cuộn hiện tại
+            DrawRectangle(listBounds.x + listBounds.width - 10, listBounds.y + rowHeight, 10, listBounds.height - rowHeight, LIGHTGRAY);
+            DrawRectangle(listBounds.x + listBounds.width - 10, scrollBarY, 10, scrollBarHeight, GRAY);
         }
 
         EndScissorMode();
-
-        // Vẽ thanh cuộn
-        if (nameVector.size() > visibleRows) {
-            float scrollBarHeight = (listBounds.height * visibleRows) / nameVector.size();
-            float scrollBarY = listBounds.y + (scrollOffset / (rowHeight * nameVector.size())) * listBounds.height;
-
-            DrawRectangle(listBounds.x + listBounds.width - 10, listBounds.y, 10, listBounds.height, DARKGRAY);
-            DrawRectangle(listBounds.x + listBounds.width - 10, scrollBarY, 10, scrollBarHeight, BLACK);
-        }
 
         // Vẽ input field và button
         inputFieldWithButton.Draw();
@@ -852,5 +901,6 @@ public:
         std::sort(nameVector.begin(), nameVector.end());
     }
 };
+
 
 #endif // GUI_H
