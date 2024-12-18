@@ -96,14 +96,21 @@ public:
           labelOn(textOn), labelOff(textOff), isOn(false) {}
 
     // Ghi đè phương thức Update và xử lý trạng thái chuyển đổi
-    void Update() {
+    int Update() {
         Button::Update(); // Gọi hàm Update từ class cha để xử lý hover và nhấn chuột
 
         // Nếu button được nhấn, chuyển đổi trạng thái
         if (IsClicked()) {
             isOn = !isOn; // Đổi trạng thái
-            SetText(isOn ? labelOn : labelOff); // Cập nhật label dựa trên trạng thái
+            if (!isOn) { //Hoi nguoc ngao xiu :")
+                SetText(labelOff);
+                return -1;
+            } else {
+                SetText(labelOn);
+                return 1;
+            }
         }
+        return 0;
     }
 
     // Getter trạng thái

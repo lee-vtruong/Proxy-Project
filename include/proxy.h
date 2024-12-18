@@ -47,14 +47,19 @@ public:
     }
 
     void acceptConnections() {
-        sockaddr_in client_addr;
-        socklen_t client_len = sizeof(client_addr);
-        socket_t client_fd = accept(server_fd, (sockaddr*)&client_addr, &client_len);
+        while (running) {
+            sockaddr_in client_addr;
+            socklen_t client_len = sizeof(client_addr);
+            socket_t client_fd = accept(server_fd, (sockaddr*)&client_addr, &client_len);
 
-        if (client_fd < 0) {
-            perror("Accept failed");
+            if (client_fd < 0) {
+                if (!running) break;
+                perror("Accept failed");
+                continue;
+            }
+            std::thread(&Proxy::handleClient, this, client_fd, client_addr).detach();
         }
-        std::thread(&Proxy::handleClient, this, client_fd, client_addr).detach();
+        CLOSE_SOCKET(server_fd);
     }
 
 private:

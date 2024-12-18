@@ -180,14 +180,13 @@ int main() {
         connections.push_back(connection);
     }
     Proxy hehe(8080);
-    hehe.start();
     // Tạo NameList
     Table table(50, 200, 800, 500, connections, customFont);
     NameList nameList(FilePath, 950, 350, 600, 200, hehe.BLACK_LIST.domains, customFont, "Blocked Domain List");
     NameList nameList1(FilePath, 950, 125, 600, 200, hehe.BLACK_LIST.ips, customFont, "Blocked IP List");
     InputFieldWithButton inputFieldWithButton(150, 125, 100, 50, "Change Port", 300, 125, 150, 50, customFont);
     inputFieldWithButton.SetText(std::to_string(hehe.getPort()));
-    ToggleButton toggleButton(550, 125, 200, 50, "Start Proxy", "Stop Proxy", 20, 10.0f, customFont, GREEN, LIGHTGRAY, DARKGRAY, WHITE);
+    ToggleButton toggleButton(550, 125, 200, 50, "Stop Proxy", "Start Proxy", 20, 10.0f, customFont, GREEN, LIGHTGRAY, DARKGRAY, WHITE);
 
     SetTargetFPS(60);
     while (!WindowShouldClose()) {
@@ -195,14 +194,16 @@ int main() {
         nameList.Update();
         nameList1.Update();
         inputFieldWithButton.Update();
-        toggleButton.Update();
-        table.Update(GetMousePosition());
         
-        // if (toggleButton.GetState()) {
-            hehe.acceptConnections();
-        // } else {
-        //     hehe.stop();
-        // }
+        table.Update(GetMousePosition());
+        int flag = toggleButton.Update();
+        
+        if (flag == 1) {
+            hehe.start();
+            std::thread(&Proxy::acceptConnections, &hehe).detach();
+        } else if (flag == -1) {
+            hehe.stop();
+        }
 
         // Draw
         BeginDrawing();
