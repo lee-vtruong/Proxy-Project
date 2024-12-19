@@ -181,10 +181,6 @@ Proxy-Project/
 
 Hãy gửi pull request hoặc báo cáo lỗi. Luôn hoan nghênh các đóng góp!
 
-## Giấy phép
-
-Dự án này được cấp phép theo [MIT License](LICENSE).
-
 ## Ghi nhận
 
 - Được phát triển bằng Raylib cho giao diện đồ họa.
