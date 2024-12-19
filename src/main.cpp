@@ -1,32 +1,11 @@
-#include "../include/GUI.h"
-#define RAYGUI_IMPLEMENTATION
-
-#include "raylib.h"
-#include <sstream>
-#include <string>
-#include <vector>
+#include "../include/gui.h"
 #include "../include/proxy.h"
-
-std::string readFile(const char* filename) {
-    std::ifstream file(filename);
-
-    if (!file) {
-        std::cerr << "Không thể mở tệp: " << filename << std::endl;
-        return {}; // Trả về lỗi nếu tệp không mở được
-    }
-
-    std::stringstream buffer;
-    buffer << file.rdbuf(); // Chuyển toàn bộ nội dung tệp vào `buffer`
-
-    std::string fileContent = buffer.str();
-
-    return fileContent; 
-}
-
 
 int main() {
     SetConfigFlags(FLAG_MSAA_4X_HINT);
     InitWindow(1600, 900, "Proxy Server");
+
+    
 
     Font customFont = LoadFont("asset/Consolas.ttf");
     Font titleFont = LoadFontEx("asset/Consolas.ttf", 128, NULL, 0);
@@ -34,17 +13,8 @@ int main() {
     const char* domainFile = "asset/blocked_domains.txt";
     const char* ipFile = "asset/blocked_ips.txt";
 
-    // std::unordered_set<std::string> nameSet;
-    // std::ifstream File(FilePath);
-    // std::string line;
-    // while (std::getline(File, line)) {
-        // nameSet.insert(line);
-    // }
-    // File.close();
-
     Proxy proxy(8080);
-    // socket_t proxy_fd = INVALID_SOCKET;
-
+    
     Table connectionRecord(50, 200, 800, 500, proxy.connections, customFont);
 
     NameList blockedDomain(domainFile, 950, 350, 600, 200, proxy.BLACK_LIST.domains, customFont, "Blocked Domain List");
@@ -61,7 +31,6 @@ int main() {
     SetTargetFPS(60);
 
     while (!WindowShouldClose()) {
-        // Update
         blockedDomain.Update();
         blockedIp.Update();
 
@@ -74,14 +43,11 @@ int main() {
         
         int flag = startButton.Update() ;
         if (flag == 1) {
-            // proxy_fd = proxy.start();
             proxy.start();
         } else if (flag == -1) {
             proxy.stop();
-            // if (proxy_fd != INVALID_SOCKET) CLOSE_SOCKET(proxy_fd);            
         }
 
-        // Draw
         BeginDrawing();
         ClearBackground(MY_BACKGROUND_COLOR);
 
@@ -100,7 +66,9 @@ int main() {
         EndDrawing();
     }
 
-    // Dọn dẹp tài nguyên
+    for (auto& fd : proxy.file_descriptors) {
+        if (fd != INVALID_SOCKET) CLOSE_SOCKET(fd);
+    }
     UnloadFont(customFont);
     CloseWindow();
     return 0;

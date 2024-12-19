@@ -8,9 +8,7 @@ struct FilterList {
     std::unordered_set<std::string> ips;     
 
     void addDomain(const std::string& domain);
-
     void addIP(const std::string& ip);
-
     bool isBlocked(const std::string& entry) const;
 };
 

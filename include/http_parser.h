@@ -10,7 +10,7 @@ struct HttpRequest {
     std::string httpVersion;
     std::unordered_map<std::string, std::string> headers;
     std::string body;
-    bool isEncrypted = false; // Mặc định không mã hóa (HTTP)
+    bool isEncrypted = false;
 
     void addHeader(const std::string& key, const std::string& value);
     std::string getHeader(const std::string& key);
@@ -24,7 +24,7 @@ struct HttpResponse {
     std::string reasonPhrase;
     std::unordered_map<std::string, std::string> headers;
     std::string body;
-    bool isEncrypted = false; // Mặc định không mã hóa (HTTP)
+    bool isEncrypted = false;
 
     void addHeader(const std::string& key, const std::string& value);
     std::string toString() const;
@@ -42,10 +42,10 @@ struct Transaction {
 };
 
 struct ConnectionInfo {
-    Host client;  // Địa chỉ client
-    Host server;  // Địa chỉ server
+    Host client;  
+    Host server;  
     std::time_t time;
-    // Vector lưu tất cả request/response trong kết nối
+
     std::vector<Transaction> transactions;
     ConnectionInfo() : client(), server(), transactions() {}
     void parseServerPort(HttpRequest request) {
@@ -56,9 +56,9 @@ struct ConnectionInfo {
             }
         } catch (const std::invalid_argument& e) {
             if (request.isEncrypted) {
-                server.port = 443; // Default port for HTTPS
+                server.port = 443;
             } else {
-                server.port = 80; // Default port for HTTP
+                server.port = 80;
             }
         } 
     }
@@ -76,9 +76,8 @@ HttpRequest parseHttpRequest(const std::string& rawMessage);
 HttpResponse parseHttpResponse(const std::string& rawMessage);
 std::string ConnectionInfoToString(const ConnectionInfo& connection);
 
-
 void log_request(HttpRequest request, FILE* f = stderr);
 void log_response(HttpResponse response , FILE* f = stderr);
 void log_connection_information(ConnectionInfo connection, FILE* f = stderr);
-
+void log_connection_to_file(ConnectionInfo connection, const char* filename);
 #endif // HTTP_PARSER_H

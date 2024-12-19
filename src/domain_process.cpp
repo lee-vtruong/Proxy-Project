@@ -1,5 +1,6 @@
 #include "../include/domain_process.h"
  
+//------------------------ FilterList ------------------------
 void FilterList::addDomain(const std::string& domain) {
     domains.insert(domain);
 }
@@ -34,7 +35,7 @@ bool FilterList::isBlocked(const std::string& entry) const {
     return false;
 }
 
-
+// ------------------------ Utils ------------------------
 bool loadListFromFile(const char*  filePath, std::unordered_set<std::string>& list) {
     std::ifstream file(filePath);
     if (!file.is_open()) {
@@ -55,27 +56,20 @@ bool loadListFromFile(const char*  filePath, std::unordered_set<std::string>& li
     return true;
 }
 
-void isBlocked(const std::string& entry, const FilterList& filterList) {
-    if (filterList.isBlocked(entry)) {
-        std::cout << "Message bị chặn: " << entry << std::endl;
-    } else {
-        std::cout << "Message hợp lệ: " << entry << std::endl;
-    }
-}
-
 FilterList initFilterList(const char* domainFile, const char* ipFile) {
     FilterList filterList;
 
     if (loadListFromFile(domainFile, filterList.domains)) {
-        std::cout << "Danh sách domain đã được load thành công.\n";
+        std::cerr << "Open Domains File Successfully.\n";
     } else {
-        std::cout << "Cannot open domain file.\n";
+        std::cerr << "Cannot open domain file.\n";
     }
 
     if (loadListFromFile(ipFile, filterList.ips)) {
-        std::cout << "Danh sách IP đã được load thành công.\n";
+        std::cerr << "Open IPs File Successfully.\n";
     } else {
-        std::cout << "Cannot open IP file.\n";
+        std::cerr << "Cannot open IP file.\n";
     }
+
     return filterList;
 }

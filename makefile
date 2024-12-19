@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -Wall -O2 -fPIC
+CFLAGS = -std=c++17 -Wall -O2 -fPIC
 INCLUDES = -Iinclude
 TARGET = proxy
 
@@ -7,15 +7,15 @@ ifeq ($(OS),Windows_NT)
     LDFLAGS = -Llib\Window -lraylib -lopengl32 -lgdi32 -lwinmm -lws2_32
     RM = del
     EXE = .exe
-    SRC = src\main.cpp src\http_parser.cpp src\domain_process.cpp
+    SRC = src\netimpl.cpp src\http_parser.cpp src\domain_process.cpp src\gui.cpp src\proxy.cpp src\main.cpp 
 else 
     RM = rm -f
     EXE =
-    SRC = src/main.cpp src/http_parser.cpp src/domain_process.cpp
-    ifeq ($(OS), Darwin)
-        LDFLAGS = -Llib/MacOS -lraylib -framework OpenGL -framework Cocoa -framework IOKit -framework coreVideo
-    else
+    SRC = src/netimpl.cpp src/http_parser.cpp src/domain_process.cpp src/gui.cpp src/proxy.cpp src/main.cpp 
+    ifeq ($(shell uname), Linux)
         LDFLAGS = -Llib/Linux -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+    else
+        LDFLAGS = -Llib/MacOS -lraylib -framework OpenGL -framework Cocoa -framework IOKit -framework coreVideo
     endif
 endif
 
@@ -25,8 +25,7 @@ all: $(TARGET)$(EXE)
 
 $(TARGET)$(EXE): $(OBJ)
 	$(CC) -o $@ $^ $(LDFLAGS)
-	# $(RM) $(OBJ)
-	$(RM) src/main.o
+	$(RM) $(OBJ)
 
 %.o: %.cpp
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@

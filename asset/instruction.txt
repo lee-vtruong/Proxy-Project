@@ -1,4 +1,4 @@
--------------------- USAGE --------------------
+--------------------- USAGE ---------------------
 1. Change Port: Enter the port number and click "Change Port" to update it.
 2. Start Proxy: Click "Start Proxy" to activate the proxy.
 3. Stop Proxy: Click "Stop Proxy" to deactivate it.

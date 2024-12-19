@@ -12,9 +12,7 @@
 #include <iostream>
 #include <mutex>
 #include <map>
-#include "raylib.h"
 #include <regex>
-// #include <pcap.h>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -22,14 +20,16 @@
 #include <unordered_set>
 #include <vector>
 
-// Kích thước bộ đệm
+#include "raylib.h"
+#include "raymath.h"
+#include "rlgl.h"
+
 #define BUFFER_SIZE 65536
-// Cổng mặc định
 #define LISTEN_PORT 8080
-// Số kết nối tối đa
 #define MAX_CONNECTIONS 100
-// #define blockedDomainsFile "asset/blocked_domains.txt"
-// #define blockedIPsFile "asset/blocked_ip.txt"
+
+#define blockedDomainsFile "asset/blocked_domains.txt"
+#define blockedIPsFile "asset/blocked_ip.txt"
 
 const Color MY_BACKGROUND_COLOR {166, 174, 191, 255};
 const Color NORMAL_TEXT_COLOR = {73, 82, 79, 255};
@@ -44,5 +44,8 @@ const Color TITLE_COLOR = {188, 212, 177, 255};
 const Color DATA_COLOR = {100, 100, 100, 255};
 const Color CONTENT_BOX_COLOR = {238, 211, 177, 240};
 const Color PRESS_COLOR = {200, 0, 0, 255};
+
+
+std::string readFile(const char* filename);
 
 #endif

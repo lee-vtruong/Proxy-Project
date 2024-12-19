@@ -1,15 +1,7 @@
 #include "../include/common_lib.h"
 #include "../include/http_parser.h"
 
-bool isSSLorTLS(const std::string &message) {
-    if (message.size() > 0 && (unsigned char)message[0] == 0x16) {
-        if (message.size() > 1 && (unsigned char)message[1] == 0x03) {
-            return true;
-        }
-    }
-    return false;
-}
-
+// ----------------- HttpRequest methods -----------------
 void HttpRequest::addHeader(const std::string& key, const std::string& value) {
     headers[key] = value; 
 }
@@ -23,29 +15,30 @@ std::string HttpRequest::toString() const {
     return request;
 }
 
-void HttpResponse::addHeader(const std::string& key, const std::string& value) {
-    headers[key] = value;
-}
-
+// This function is used to get the url from the request
 std::string HttpRequest::getHeader(const std::string& key) {
-    auto it = headers.find(key);  // Tìm kiếm header trong map
-    if (it != headers.end()) {    // Nếu tìm thấy header
+    auto it = headers.find(key); 
+    if (it != headers.end()) { 
         std::string headerValue = it->second;
 
-        // Kiểm tra xem header có chứa dấu ':' hay không và xử lý giá trị sau dấu ':'
         size_t pos = headerValue.find(':');
         if (pos != std::string::npos) {
-            // Xử lý cổng nếu cần (giả sử cổng sẽ là số 443 cho HTTPS)
             if (headerValue.substr(pos + 1) == "443") {
-                isEncrypted = true;  // Đánh dấu kết nối là HTTPS
+                isEncrypted = true; 
             } else {
-                isEncrypted = false;  // Không phải HTTPS (HTTP thường là 80)
+                isEncrypted = false;
             }
-            return headerValue.substr(0, pos);  // Trả về phần sau dấu ":"
+            return headerValue.substr(0, pos); 
         }
-        return headerValue;  // Trả về toàn bộ giá trị nếu không có dấu ":"
+        return headerValue;
     }
-    return "";  // Trả về chuỗi rỗng nếu không tìm thấy key
+    return ""; 
+}
+
+
+// ----------------- HttpResponse methods -----------------
+void HttpResponse::addHeader(const std::string& key, const std::string& value) {
+    headers[key] = value;
 }
 std::string HttpResponse::toString() const {
     std::string response = httpVersion + " " + std::to_string(statusCode) + " " + reasonPhrase + "\r\n";
@@ -56,6 +49,8 @@ std::string HttpResponse::toString() const {
     return response;
 }
 
+
+// ----------------- ConnectionInfo methods -----------------
 void ConnectionInfo::addTransaction(const HttpRequest& request, const HttpResponse& response) {
     transactions.push_back({request, response});
 }
@@ -68,6 +63,16 @@ void ConnectionInfo::printTransactions() const {
 }
 
 
+// ----------------- Utility functions -----------------
+bool isSSLorTLS(const std::string &message) {
+    if (message.size() > 0 && (unsigned char)message[0] == 0x16) {
+        if (message.size() > 1 && (unsigned char)message[1] == 0x03) {
+            return true;
+        }
+    }
+    return false;
+}
+
 HttpRequest parseHttpRequest(const std::string& rawMessage) {
     HttpRequest request;
     request.rawRequest = rawMessage;
@@ -76,17 +81,14 @@ HttpRequest parseHttpRequest(const std::string& rawMessage) {
         std::istringstream stream(rawMessage);
         std::string line;
 
-        // Parse dòng đầu tiên (Request Line)
         if (std::getline(stream, line)) {
             std::istringstream lineStream(line);
             lineStream >> request.method >> request.url >> request.httpVersion;
-            // Kiểm tra HTTPS
             if (request.httpVersion.find("HTTPS") != std::string::npos) {
                 request.isEncrypted = true;
             }
         }
 
-        // Parse headers
         while (std::getline(stream, line) && line != "\r") {
             size_t colonPos = line.find(':');
             if (colonPos != std::string::npos) {
@@ -99,7 +101,6 @@ HttpRequest parseHttpRequest(const std::string& rawMessage) {
             }
         }
 
-        // Parse body (nếu có)
         std::string body;
         while (std::getline(stream, line)) {
             body += line + "\n";
@@ -114,7 +115,6 @@ HttpRequest parseHttpRequest(const std::string& rawMessage) {
 }
 
 void trimNewlineChars(std::string& str) {
-    // Loại bỏ '\r' và '\n' ở cuối chuỗi
     size_t end = str.find_last_not_of("\r\n");
     if (end != std::string::npos) {
         str = str.substr(0, end + 1);
@@ -131,19 +131,16 @@ HttpResponse parseHttpResponse(const std::string& rawMessage) {
         std::istringstream stream(rawMessage);
         std::string line;
 
-        // Parse dòng đầu tiên (Status Line)
         if (std::getline(stream, line)) {
             std::istringstream lineStream(line);
             lineStream >> response.httpVersion >> response.statusCode;
             std::getline(lineStream, response.reasonPhrase);
             response.reasonPhrase.erase(0, response.reasonPhrase.find_first_not_of(" "));
-            // Kiểm tra HTTPS
             if (response.httpVersion.find("HTTPS") != std::string::npos) {
                 response.isEncrypted = true;
             }
         }
 
-        // Parse headers
         while (std::getline(stream, line) && line != "\r") {
             size_t colonPos = line.find(':');
             if (colonPos != std::string::npos) {
@@ -155,7 +152,6 @@ HttpResponse parseHttpResponse(const std::string& rawMessage) {
             }
         }
 
-        // Parse body (nếu có)
         std::string body;
         while (std::getline(stream, line)) {
             body += line + "\n";
@@ -202,4 +198,27 @@ std::string ConnectionInfoToString(const ConnectionInfo& connection) {
     }
 
     return oss.str();
+}
+
+// ----------------- Logging functions -----------------
+void log_request(HttpRequest request, FILE* f) {
+    fprintf(f, "Raw Request: %s\n", request.toString().c_str());
+}
+
+void log_response(HttpResponse response, FILE* f) {
+    fprintf(f, "Raw Response: %s\n", response.toString().c_str());
+}
+
+void log_connection(ConnectionInfo connection, FILE* f) {
+    fprintf(f, "Connection Info: %s\n", ConnectionInfoToString(connection).c_str());
+}
+
+void log_connection_to_file(ConnectionInfo connection, const char* filename) {
+    FILE* f = fopen(filename, "a");
+    if (f == NULL) {
+        perror("Error opening file");
+        return;
+    }
+    log_connection(connection, f);
+    fclose(f);
 }
