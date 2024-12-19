@@ -44,18 +44,23 @@ struct Transaction {
 struct ConnectionInfo {
     Host client;  // Địa chỉ client
     Host server;  // Địa chỉ server
+    std::time_t time;
     // Vector lưu tất cả request/response trong kết nối
     std::vector<Transaction> transactions;
     ConnectionInfo() : client(), server(), transactions() {}
     void parseServerPort(HttpRequest request) {
         size_t pos = request.url.find(':');
-        if (pos != std::string::npos) {
-            server.port = std::stoi(request.url.substr(pos + 1));
-        } else if (request.isEncrypted) {
-            server.port = 443; // Default port for HTTPS
-        } else {
-            server.port = 80; // Default port for HTTP
-        }
+        try {
+            if (pos != std::string::npos) {
+                server.port = std::stoi(request.url.substr(pos + 1));
+            }
+        } catch (const std::invalid_argument& e) {
+            if (request.isEncrypted) {
+                server.port = 443; // Default port for HTTPS
+            } else {
+                server.port = 80; // Default port for HTTP
+            }
+        } 
     }
 
     void addTransaction(const HttpRequest& request, const HttpResponse& response);

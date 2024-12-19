@@ -186,16 +186,19 @@ bool isValidHttpVersion(const std::string version) {
 std::string ConnectionInfoToString(const ConnectionInfo& connection) {
     std::ostringstream oss;
     oss << "Client IP: " << connection.client.ip << ":" << connection.client.port << "\n";
-    oss << "Server IP: " << connection.server.ip << ":" << connection.server.port << "\n\n";
+    oss << "Server IP: " << connection.server.ip << ":" << connection.server.port << "\n";
+    oss << "Time: " << std::ctime(&connection.time) << "\n";
 
     for (size_t i = 0; i < connection.transactions.size(); ++i) {
         const Transaction& transaction = connection.transactions[i];
         oss << "Transaction " << i + 1 << ":\n";
         oss << "  Request Method: " << transaction.request.method << "\n";
         oss << "  Request url: " << transaction.request.url << "\n";
-        oss << "  Request HTTP Version: " << transaction.request.httpVersion << "\n\n";
+        oss << "  Request HTTP Version: " << transaction.request.httpVersion << "\n";
+        oss << "  Raw Request: " << transaction.request.rawRequest << "\n\n";
         oss << "  Response Status Code: " << transaction.response.statusCode << "\n";
-        oss << "  Response Reason: " << transaction.response.reasonPhrase << "\n\n";
+        oss << "  Response Reason: " << transaction.response.reasonPhrase << "\n";
+        oss << "  Raw Response: " << transaction.response.rawResponse << "\n";
     }
 
     return oss.str();

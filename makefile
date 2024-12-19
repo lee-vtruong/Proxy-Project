@@ -24,7 +24,8 @@ all: $(TARGET)$(EXE)
 
 $(TARGET)$(EXE): $(OBJ)
 	$(CC) -o $@ $^ $(LDFLAGS)
-	$(RM) $(OBJ)
+	# $(RM) $(OBJ)
+	$(RM) src/main.o
 
 %.o: %.cpp
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@

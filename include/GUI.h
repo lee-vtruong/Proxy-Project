@@ -14,6 +14,7 @@ protected:
     Color hoverColor;         // Màu khi hover
     Color pressColor;         // Màu khi nhấn
     Color textColor;          // Màu của text
+    Color hoverTextColor;
     std::string text;         // Nội dung text hiển thị trên button
     int fontSize;             // Kích thước font chữ
     Font font;                // Font tùy chỉnh
@@ -24,8 +25,8 @@ protected:
 public:
     // Constructor
     Button(float x, float y, float width, float height, const std::string& buttonText, int textSize = 20, 
-           float radius = 10.0f, Font customFont = GetFontDefault(), Color base = GRAY, Color hover = LIGHTGRAY, Color press = DARKGRAY, Color textCol = WHITE)
-        : bounds{ x, y, width, height }, baseColor(base), hoverColor(hover), pressColor(press), textColor(textCol), text(buttonText),
+           float radius = 10.0f, Font customFont = GetFontDefault(), Color base = GRAY, Color hover = LIGHTGRAY, Color press = DARKGRAY, Color textCol = WHITE, Color hoverText = WHITE)
+        : bounds{ x, y, width, height }, baseColor(base), hoverColor(hover), pressColor(press), textColor(textCol), hoverTextColor(hoverText), text(buttonText),
           fontSize(textSize), font(customFont), isHovered(false), isPressed(false), cornerRadius(radius) {}
 
     // Kiểm tra trạng thái hover hoặc nhấn chuột
@@ -39,11 +40,13 @@ public:
     // Vẽ button lên màn hình (với bo góc)
     void Draw() {
         // Chọn màu dựa trên trạng thái
-        Color currentColor = baseColor;
+        Color currentColor = baseColor, currentTextColor = textColor;
         if (isPressed) {
             currentColor = pressColor;
+            currentTextColor = hoverTextColor;
         } else if (isHovered) {
             currentColor = hoverColor;
+            currentTextColor = hoverTextColor;
         }
 
         // Vẽ hình chữ nhật bo góc của button
@@ -56,7 +59,7 @@ public:
         Vector2 textSize = MeasureTextEx(font, text.c_str(), fontSize, 1);
         float textX = bounds.x + (bounds.width - textSize.x) / 2;
         float textY = bounds.y + (bounds.height - textSize.y) / 2;
-        DrawTextEx(font, text.c_str(), { textX, textY }, fontSize, 1, textColor);
+        DrawTextEx(font, text.c_str(), { textX, textY }, fontSize, 1, currentTextColor);
     }
 
     // Kiểm tra xem button có được nhấn không (dùng để thực hiện hành động)
@@ -91,8 +94,8 @@ public:
     // Constructor
     ToggleButton(float x, float y, float width, float height, 
                  const std::string& textOn, const std::string& textOff, int textSize = 20, 
-                 float radius = 10.0f, Font customFont = GetFontDefault(), Color base = GRAY, Color hover = LIGHTGRAY, Color press = DARKGRAY, Color textCol = WHITE)
-        : Button(x, y, width, height, textOff, textSize, radius, customFont, base, hover, press, textCol), // Khởi tạo class cha
+                 float radius = 10.0f, Font customFont = GetFontDefault(), Color base = GRAY, Color hover = LIGHTGRAY, Color press = DARKGRAY, Color textCol = WHITE, Color hoverText = WHITE)
+        : Button(x, y, width, height, textOff, textSize, radius, customFont, base, hover, press, textCol, hoverText), // Khởi tạo class cha
           labelOn(textOn), labelOff(textOff), isOn(false) {}
 
     // Ghi đè phương thức Update và xử lý trạng thái chuyển đổi
@@ -172,7 +175,7 @@ public:
     // Constructor
     TextBox(float x, float y, float width, float height, const std::string& content,
             Font customFont = GetFontDefault(), int textSize = 20, float radius = 10.0f,
-            Color bg = LIGHTGRAY, Color border = GRAY, Color textCol = BLACK, float spacing = 5.0f)
+            Color bg = CONTENT_BOX_COLOR, Color border = GRAY, Color textCol = BLACK, float spacing = 5.0f)
         : bounds{ x, y, width, height }, borderColor(border), backgroundColor(bg),
           textColor(textCol), font(customFont), fontSize(textSize),
           cornerRadius(radius), text(content),
@@ -344,7 +347,7 @@ public:
 
         // Vẽ thanh tiêu đề
         DrawRectangleRounded({ bounds.x, bounds.y, bounds.width, 30 }, cornerRadius / bounds.width, 6, titleBarColor);
-        DrawTextEx(font, title.c_str(), {bounds.x + 10, bounds.y + 7}, 20, 6, textColor);
+        DrawTextEx(font, title.c_str(), {bounds.x + 10, bounds.y + 7}, 20, 6, WHITE);
 
         // Vẽ nút đóng (X)
         DrawTextEx(font, "X", {bounds.x + bounds.width - 20, bounds.y + 5}, 20, 6, RED);
@@ -394,7 +397,7 @@ private:
     // Vẽ một hàng
     void DrawRow(int rowIndex, float y, bool isHovered, bool isSelected) {
         // Màu nền hàng khi được hover hoặc chọn
-        Color backgroundColor = isSelected ? DARKGRAY : (isHovered ? LIGHTGRAY : WHITE);
+        Color backgroundColor = isSelected ? DARKGRAY : (isHovered ? LIGHTGRAY : FILLED_COLOR);
         DrawRectangle(bounds.x, y, bounds.width, rowHeight, backgroundColor);
 
         const ConnectionInfo& connection = data[rowIndex];
@@ -523,7 +526,7 @@ public:
     // Vẽ bảng lên màn hình
     void Draw() {
         // Vẽ nền bảng
-        DrawRectangleRounded(bounds, 0.01, 10, LIGHTGRAY);
+        DrawRectangleRounded(bounds, 0.01, 10, EMPTY_COLOR);
         DrawRectangleRoundedLinesEx(bounds, 0.01, 10, 2, DARKGRAY);
 
         // Vẽ tiêu đề các cột
@@ -586,8 +589,8 @@ private:
 
 public:
     // Constructor
-    InputText(float x, float y, float width, float height, int maxLength = 64, Font customFont = GetFontDefault(), int textSize = 20)
-        : bounds{ x, y, width, height }, maxChars(maxLength), baseColor{ LIGHTGRAY }, borderColor{ DARKGRAY },
+    InputText(float x, float y, float width, float height, int maxLength = 64, Font customFont = GetFontDefault(), int textSize = 20, Color baseCol = LIGHTGRAY)
+        : bounds{ x, y, width, height }, maxChars(maxLength), baseColor{ baseCol }, borderColor{ DARKGRAY },
           textColor{ BLACK }, cursorColor{ BLACK }, isActive(false), cursorPosition(0), blinkTime(0.0),
           textOffsetX(0), backspaceTimer(0.0), font(customFont), fontSize(textSize), text("") {}
 
@@ -701,9 +704,9 @@ private:
 public:
     // Constructor
     InputFieldWithButton(float inputX, float inputY, float inputWidth, float inputHeight,
-                         const std::string& buttonText, float buttonX, float buttonY, float buttonWidth, float buttonHeight, Font font = GetFontDefault())
-        : inputField(inputX, inputY, inputWidth, inputHeight, 256, font),
-          actionButton(buttonX, buttonY, buttonWidth, buttonHeight, buttonText, 20.f, 10.f, font) {}
+                         const std::string& buttonText, float buttonX, float buttonY, float buttonWidth, float buttonHeight, Font font = GetFontDefault(), Color buttonCol = NORMAL_BUTTON_COLOR, Color hoverCol = SECONDARY_HOVERED_BUTTON_COLOR, Color inputCol = WHITE)
+        : inputField(inputX, inputY, inputWidth, inputHeight, 256, font, 20, inputCol),
+          actionButton(buttonX, buttonY, buttonWidth, buttonHeight, buttonText, 20.f, 10.f, font, buttonCol, hoverCol) {}
 
     // Cập nhật logic
     bool Update() {
@@ -763,7 +766,7 @@ public:
     NameList(std::string filename, float x, float y, float width, float height, 
              std::unordered_set<std::string>& names, Font customFont, const std::string& titleText, int textSize = 20, int rowSpacing = 5.0f)
         : fileName(filename), bounds{x, y, width, height - 50}, nameSet(names), font(customFont),
-          inputFieldWithButton(x + 10, y + height - 40, width - 120, 30, "Add", x + width - 100, y + height - 40, 90, 30, customFont),
+          inputFieldWithButton(x + 10, y + height - 40, width - 120, 30, "Add", x + width - 100, y + height - 40, 90, 30, customFont, NORMAL_BUTTON_COLOR, SECONDARY_HOVERED_BUTTON_COLOR),
           showContextMenu(false), contextMenuPosition{0, 0}, selectedNameIndex(-1), scrollOffset(0.0f), title(titleText),
           bounds_d{x, y + rowHeight, width, height - rowHeight - 50}, fontSize(textSize), lineSpacing(rowSpacing) {
         UpdateNameVector();
@@ -886,12 +889,12 @@ public:
 
     void Draw() {
         // Vẽ khung danh sách
-        DrawRectangleRounded(bounds, 0.01, 10, LIGHTGRAY);
+        DrawRectangleRounded(bounds, 0.01, 10, EMPTY_COLOR);
         DrawRectangleRoundedLinesEx(bounds, 0.01, 10, 2, DARKGRAY);
 
         // Vẽ tiêu đề
-        DrawRectangle(bounds.x, bounds.y, bounds.width, rowHeight, DARKGRAY); // Nền tiêu đề
-        DrawTextEx(font, title.c_str(), {bounds.x + 10, bounds.y + 5}, 20, 1, WHITE);
+        DrawRectangle(bounds.x, bounds.y, bounds.width, rowHeight, TITLE_COLOR); // Nền tiêu đề
+        DrawTextEx(font, title.c_str(), {bounds.x + 10, bounds.y + 5}, 20, 1, BLACK);
 
         // Vùng cắt để giới hạn vẽ trong khung
         BeginScissorMode(bounds.x, bounds.y + rowHeight, bounds.width, bounds.height - rowHeight);
@@ -900,10 +903,10 @@ public:
         float yPosition = bounds.y + rowHeight - scrollOffset;
         for (size_t index = 0; index < nameVector.size(); index++) {
             Rectangle nameBounds = {bounds.x, yPosition, bounds.width, rowHeight};
-            Color hoverColor = CheckCollisionPointRec(GetMousePosition(), nameBounds) ? DARKGRAY : WHITE;
+            Color hoverColor = CheckCollisionPointRec(GetMousePosition(), nameBounds) ? WHITE : FILLED_COLOR;
 
             DrawRectangleRec(nameBounds, hoverColor);
-            DrawTextEx(font, nameVector[index].c_str(), {nameBounds.x + 10, yPosition + 5}, 20, 1, BLACK);
+            DrawTextEx(font, nameVector[index].c_str(), {nameBounds.x + 10, yPosition + 5}, 20, 1, DATA_COLOR);
             yPosition += rowHeight;
         }
 
@@ -933,7 +936,7 @@ public:
 
         // Vẽ menu "Delete"
         if (showContextMenu) {
-            DrawRectangleRec({contextMenuPosition.x, contextMenuPosition.y, 80, 30}, RED);
+            DrawRectangleRec({contextMenuPosition.x, contextMenuPosition.y, 80, 30}, PRESS_COLOR);
             DrawTextEx(font, "Delete", {contextMenuPosition.x + 10, contextMenuPosition.y + 5}, 20, 1, WHITE);
         }
     }

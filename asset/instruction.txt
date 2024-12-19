@@ -1,0 +1,9 @@
+-------------------- USAGE --------------------
+1. Change Port: Enter the port number and click "Change Port" to update it.
+2. Start Proxy: Click "Start Proxy" to activate the proxy.
+3. Stop Proxy: Click "Stop Proxy" to deactivate it.
+4. Monitor Connection List: View connection details (Method, IP Source, IP Remote, URL) in the table on the left. Double-click a row to see detailed information.
+5. Block IP: Enter the IP address to block in the field under "Blocked IP List", then click "Add" to add it to the blocklist.
+6. Block Domain: Enter the domain name to block in the field under "Blocked Domain List", then click "Add" to add it to the blocklist.
+7. Manage Blocklist: Right-click on an IP/domain in the blocklist and select "Delete" to remove it.
+---------------------------------------

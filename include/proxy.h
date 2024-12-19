@@ -7,7 +7,7 @@ class Proxy {
 public:
     FilterList BLACK_LIST;
     std::vector<ConnectionInfo> connections;
-    Proxy(int port) : BLACK_LIST(initFilterList("asset/blocked_domains.txt", "asset/blocked_ip.txt")), port(port), server_fd(-1), running(false) {}
+    Proxy(int port) : BLACK_LIST(initFilterList("asset/blocked_domains.txt", "asset/blocked_ips.txt")), port(port), server_fd(-1), running(false) {}
 
     void stop() {
         running = false;
@@ -15,7 +15,7 @@ public:
             CLOSE_SOCKET(server_fd);
         }
         std::cout << "Proxy server stopped." << std::endl;
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 
     bool setPort(int port) {
@@ -35,7 +35,7 @@ public:
         INIT_SOCKET();
         setupServerSocket();
         std::thread(&Proxy::acceptConnections, this).detach();
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
         return server_fd;    
     }
 
@@ -108,6 +108,7 @@ private:
         conn_info.client.port = ntohs(client_addr.sin_port);
         std::cout << "Client IP: " << conn_info.client.ip << ", Port: " << conn_info.client.port << std::endl;
 
+        conn_info.time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
         try {
             ssize_t bytes_read = recv(client_fd, buffer, BUFFER_SIZE, 0);
             if (bytes_read <= 0) {
@@ -216,14 +217,14 @@ private:
             struct timeval timeout;
             timeout.tv_sec = 10;  // timeout sau 5 giây
             timeout.tv_usec = 0;
-
+            std::string res;
             if (request.method == "CONNECT") {
                 char connect_response[] = "HTTP/1.1 200 Connection Established\r\n\r\n";
                 send(client_fd, connect_response, strlen(connect_response), 0);
                 response = parseHttpResponse(connect_response);
                 conn_info.addTransaction(request, response);
 
-
+                bool countClient = 0, countRemote = 0;
                 while (running) {
                     fd_set fds;
                     FD_ZERO(&fds);
@@ -244,17 +245,23 @@ private:
                     if (FD_ISSET(client_fd, &fds)) {
                         bytes_read = recv(client_fd, buffer, BUFFER_SIZE, 0);
                         if (bytes_read <= 0) break;
-                        // HttpRequest req = parseHttpRequest(buffer);
+                        HttpRequest req = parseHttpRequest(buffer);
+                        countClient = true;
                         send(remote_fd, buffer, bytes_read, 0);
                     }
 
                     if (FD_ISSET(remote_fd, &fds)) {
                         bytes_read = recv(remote_fd, buffer, BUFFER_SIZE, 0);
                         if (bytes_read <= 0) break;
-                        // response = parseHttpResponse(buffer);
+                        response = parseHttpResponse(buffer);
+                        countRemote = true;
                         send(client_fd, buffer, bytes_read, 0);
                     }
-                    // conn_info.addTransaction(request, response);
+                    if (countClient && countRemote && !conn_info.transactions[0].request.isEncrypted) {
+                        conn_info.addTransaction(request, response);
+                        countClient = 0;
+                        countRemote = 0;
+                    }
                 }
             } else {
                 send(remote_fd, request.rawRequest.c_str(), request.rawRequest.size(), 0);
@@ -265,10 +272,10 @@ private:
 
                     int activity = select(remote_fd + 1, &fds, NULL, NULL, &timeout);
                     if (activity < 0) {
-                        perror("Select error");
+                        print_socket_error("Select Error.");
                         break;
                     } else if (activity == 0) {
-                        printf("Timeout reached, ending read loop.\n");
+                        print_socket_error("Timeout reached, ending read loop.");
                         break;
                     }
 
@@ -277,10 +284,12 @@ private:
                     if (bytes_read <= 0) {
                         break;
                     }
-                    // response = parseHttpResponse(buffer);
+                    res += buffer;
                     send(client_fd, buffer, bytes_read, 0); 
-                    // conn_info.addTransaction(request, response);
                 }
+                res += "\n\n";
+                response = parseHttpResponse(res);
+                conn_info.addTransaction(request, response);
             }
             // std::lock_guard<std::mutex> lock(connections_mutex);
             // connections.push_back(conn_info);
@@ -295,138 +304,4 @@ private:
         if (remote_fd != INVALID_SOCKET) CLOSE_SOCKET(remote_fd);
         CLOSE_SOCKET(client_fd);
     }
-
 };
-
-
-// class Proxy {
-// public:
-//     Proxy(const std::string& host = "127.0.0.1", int port = 8080)
-//         : host(host), port(port), is_running(false) {}
-
-//     // Hàm bắt đầu proxy
-//     void start() {
-//         if (is_running) {
-//             std::cerr << "Proxy is already running." << std::endl;
-//             return;
-//         }
-
-//         // Khởi tạo socket
-//         server_socket = socket(AF_INET, SOCK_STREAM, 0);
-//         if (server_socket < 0) {
-//             perror("Failed to create socket");
-//             return;
-//         }
-
-//         sockaddr_in server_addr;
-//         server_addr.sin_family = AF_INET;
-//         server_addr.sin_addr.s_addr = inet_addr(host.c_str());
-//         server_addr.sin_port = htons(port);
-
-//         // Liên kết socket với địa chỉ và cổng
-//         if (bind(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
-//             perror("Bind failed");
-//             CLOSE_SOCKET(server_socket);
-//             return;
-//         }
-
-//         // Lắng nghe kết nối
-//         if (listen(server_socket, 5) < 0) {
-//             perror("Listen failed");
-//             CLOSE_SOCKET(server_socket);
-//             return;
-//         }
-
-//         is_running = true;
-//         std::cout << "Proxy server started on " << host << ":" << port << std::endl;
-//         accept_connections();
-//     }
-
-//     // Hàm dừng proxy
-//     void stop() {
-//         if (!is_running) {
-//             std::cerr << "Proxy is not running." << std::endl;
-//             return;
-//         }
-
-//         is_running = false;
-//         CLOSE_SOCKET(server_socket);
-//         std::cout << "Proxy server stopped." << std::endl;
-//     }
-
-//     // Hàm để lấy danh sách kết nối hiện tại
-//     std::vector<std::string> get_connections() {
-//         std::lock_guard<std::mutex> lock(mtx);
-//         return connections;
-//     }
-
-//     // Tùy chỉnh lại filter list
-//     void set_filter_list(const std::vector<std::string>& new_filter_list) {
-//         std::lock_guard<std::mutex> lock(mtx);
-//         filter_list = new_filter_list;
-//     }
-
-//     // Tùy chỉnh lại cổng
-//     void set_port(int new_port) {
-//         port = new_port;
-//         std::cout << "Port updated to " << port << "." << std::endl;
-//         if (is_running) {
-//             stop();
-//             start();
-//         }
-//     }
-
-//     // Hàm xử lý các kết nối đến
-//     void accept_connections() {
-//         sockaddr_in client_addr;
-//         socklen_t client_len = sizeof(client_addr);
-//         int client_socket = accept(server_socket, (struct sockaddr*)&client_addr, &client_len);
-
-//         if (client_socket < 0) {
-//             perror("Accept failed");
-//         }
-
-//         std::string client_ip = inet_ntoa(client_addr.sin_addr);
-//         {
-//             std::lock_guard<std::mutex> lock(mtx);
-//             connections.push_back(client_ip);
-//         }
-
-//         std::cout << "New connection from " << client_ip << std::endl;
-//         std::thread(&Proxy::handle_client, this, client_socket, client_ip).detach();
-//     }
-
-// private:
-//     std::string host;
-//     int port;
-//     bool is_running;
-//     int server_socket;
-//     std::vector<std::string> connections;
-//     std::vector<std::string> filter_list;
-//     std::mutex mtx;
-
-
-//     // Hàm xử lý kết nối client
-//     void handle_client(int client_socket, const std::string& client_ip) {
-//         char buffer[1024] = {0};
-
-//         // Đọc dữ liệu từ client
-//         int read_size = read(client_socket, buffer, sizeof(buffer));
-//         if (read_size > 0) {
-//             std::cout << "Received data from " << client_ip << ": " << buffer << std::endl;
-//             // Gửi lại phản hồi cho client
-//             std::string response = "HTTP/1.1 200 OK\n\nHello from Proxy Server";
-//             send(client_socket, response.c_str(), response.length(), 0);
-//         }
-
-//         CLOSE_SOCKET(client_socket);
-//         {
-//             std::lock_guard<std::mutex> lock(mtx);
-//             auto it = std::find(connections.begin(), connections.end(), client_ip);
-//             if (it != connections.end()) {
-//                 connections.erase(it);
-//             }
-//         }
-//         std::cout << "Connection from " << client_ip << " closed." << std::endl;
-//     }
-// };
