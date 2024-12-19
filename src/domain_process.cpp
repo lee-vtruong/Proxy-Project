@@ -18,9 +18,20 @@ bool FilterList::isBlocked(const std::string& entry) const {
             return true;
         }
     }
+    for (const auto& ip : ips) {
+        std::string res;
+        size_t end = entry.find_last_not_of("\r\n");
+        if (end != std::string::npos) {
+            res = entry.substr(0, end + 1);
+        } else {
+            res.clear();
+        }
+        if (res == ip) {
+            return true;
+        }
+    }
 
-    // Kiểm tra IP
-    return ips.count(entry) > 0;
+    return false;
 }
 
 

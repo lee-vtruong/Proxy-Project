@@ -191,7 +191,7 @@ private:
                 throw std::runtime_error("Version HTTP is not supported!\n");
             }
 
-            if (BLACK_LIST.isBlocked(host)) {
+            if (BLACK_LIST.isBlocked(host) || BLACK_LIST.isBlocked(conn_info.server.ip)) {
                 const char *http_404_message =
                         "HTTP/1.1 404 Not Found\r\n"
                         "Content-Type: text/html; charset=UTF-8\r\n"
