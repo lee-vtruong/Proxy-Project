@@ -190,7 +190,7 @@ int main() {
         
         if (flag == 1) {
             hehe.start();
-            std::thread(Proxy::acceptConnections, &hehe).detach();
+            std::thread(&Proxy::acceptConnections, &hehe).detach();
         } else if (flag == -1) {
             hehe.stop();
         }

@@ -29,10 +29,11 @@ public:
           fontSize(textSize), font(customFont), isHovered(false), isPressed(false), cornerRadius(radius) {}
 
     // Kiểm tra trạng thái hover hoặc nhấn chuột
-    void Update() {
+    bool Update() {
         Vector2 mousePoint = GetMousePosition();
         isHovered = CheckCollisionPointRec(mousePoint, bounds); // Kiểm tra chuột có hover lên button không
         isPressed = isHovered && IsMouseButtonDown(MOUSE_LEFT_BUTTON); // Kiểm tra nhấn chuột trái
+        return isPressed;
     }
 
     // Vẽ button lên màn hình (với bo góc)
@@ -96,7 +97,7 @@ public:
 
     // Ghi đè phương thức Update và xử lý trạng thái chuyển đổi
     int Update() {
-        Button::Update(); // Gọi hàm Update từ class cha để xử lý hover và nhấn chuột
+        Button::Update();
 
         // Nếu button được nhấn, chuyển đổi trạng thái
         if (IsClicked()) {
@@ -403,7 +404,7 @@ private:
 
         std::string clientIp = connection.client.ip;       // Client IP
         std::string serverIp = connection.server.ip;       // Server IP
-        std::string url = connection.transactions[0].request.uri; // URL
+        std::string url = connection.transactions[0].request.url; // URL
 
         // Vẽ dữ liệu từng cột
         float columnX[] = { bounds.x + 10, bounds.x + 120, bounds.x + 300, bounds.x + 500 };
@@ -431,6 +432,7 @@ public:
 
     // Cập nhật logic bảng
     void Update(std::vector<ConnectionInfo>& connections) {
+        // data = std::vector<ConnectionInfo>((connections.size() > 50) ?  connections.end() - 50 : connections.begin(), connections.end());
         data = connections;
         WrapText();
         Vector2 mousePosition = GetMousePosition();
@@ -704,9 +706,9 @@ public:
           actionButton(buttonX, buttonY, buttonWidth, buttonHeight, buttonText, 20.f, 10.f, font) {}
 
     // Cập nhật logic
-    void Update() {
+    bool Update() {
         inputField.Update();
-        actionButton.Update();
+        return actionButton.Update();
     }
 
     // Vẽ lên màn hình

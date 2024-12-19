@@ -11,24 +11,32 @@ public:
 
     void stop() {
         running = false;
-        if (server_fd != INVALID_SOCKET) CLOSE_SOCKET(server_fd);
+        if (server_fd != INVALID_SOCKET) {
+            CLOSE_SOCKET(server_fd);
+        }
         std::cout << "Proxy server stopped." << std::endl;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 
-    void setPort(int port) {
-        stop();
+    bool setPort(int port) {
         this->port = port;
+        if (!running) return false;
+        stop();
         start();
+        return true;
     }
 
     int getPort() const {
         return port;
     }
 
-    void start() {
+    int start() {
         running = true;
         INIT_SOCKET();
         setupServerSocket();
+        std::thread(&Proxy::acceptConnections, this).detach();
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        return server_fd;    
     }
 
     void acceptConnections() {
@@ -43,9 +51,8 @@ public:
                 continue;
             }
             
-            std::thread(Proxy::handleClient, this, client_fd, client_addr).detach();
+            std::thread(&Proxy::handleClient, this, client_fd, client_addr).detach();
         }
-        CLOSE_SOCKET(server_fd);
     }
 
 private:
@@ -59,7 +66,7 @@ private:
         std::lock_guard<std::mutex> lock(connections_mutex);
         connections.insert(connections.begin(), conn_info);
         if (connections.size() > 100) {
-            connections.erase(connections.begin());
+            connections.pop_back();
         }
 
         // Log thong tin ra file.
@@ -67,7 +74,7 @@ private:
 
     void setupServerSocket() {
         sockaddr_in server_addr;
-        if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
+        if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET) {
             perror("Socket creation failed");
             exit(EXIT_FAILURE);
         }
@@ -107,21 +114,57 @@ private:
                 throw std::runtime_error("Failed to receive data from client");
             }
 
-            // buffer[bytes_read] = '\0';
+            buffer[bytes_read] = '\0';
             std::string rawRequest(buffer);
 
             HttpRequest request = parseHttpRequest(rawRequest);
-            std::cout << "\033[31mREQUEST:\033[0m " << request.rawRequest << "\n"; 
+            conn_info.parseServerPort(request);
+            // std::cout << "\033[31mREQUEST:\033[0m " << request.rawRequest << "\n"; 
             HttpResponse response;
             
+            sockaddr_in remote_addr;
             std::string host = request.getHeader("Host");
-            remote_fd = connectRemote(request, host);
+
+            remote_fd = socket(AF_INET, SOCK_STREAM, 0);
+            if (remote_fd == INVALID_SOCKET) {
+                print_socket_error("Remote socket creation failed");
+                throw std::runtime_error("Failed to connect server remote");
+            }
+                std::cout << host.c_str()  << "1\n";
+
+            memset(&remote_addr, 0, sizeof(remote_addr));
+            remote_addr.sin_family = AF_INET;
+            remote_addr.sin_port = htons(conn_info.server.port);
+            struct hostent* remote_host = gethostbyname(host.c_str());
+
+            if (!remote_host) {
+                print_socket_error("Failed to resolve host address");
+                CLOSE_SOCKET(remote_fd);
+                throw std::runtime_error("Failed to connect server remote");
+            }
+            memcpy(&remote_addr.sin_addr.s_addr, remote_host->h_addr, remote_host->h_length);
+            
+            if (unsigned(remote_host->h_length) > sizeof(remote_addr.sin_addr)) {
+                fprintf(stderr, "Invalid host address length\n");
+                CLOSE_SOCKET(remote_fd);
+                throw std::runtime_error("Failed to connect server remote");
+            }
+                std::cout << host.c_str() << " : " << conn_info.server.port << "5\n";
+            if (connect(remote_fd, (struct sockaddr*)&remote_addr, sizeof(remote_addr)) < 0) {
+                print_socket_error("Connect to remote server failed");
+                CLOSE_SOCKET(remote_fd);
+                throw std::runtime_error("Failed to connect server remote");
+            }
+            std::cout << host.c_str()  << "6\n";
+
             if (remote_fd == INVALID_SOCKET) {
                 throw std::runtime_error("Failed to connect to remote server");
             }
+            std::cout << "3\n";
+
             //Cho server remote
-            inet_ntop(AF_INET, &(client_addr.sin_addr), conn_info.server.ip, INET_ADDRSTRLEN);
-            conn_info.server.port = ntohs(client_addr.sin_port);
+            inet_ntop(AF_INET, &(remote_addr.sin_addr), conn_info.server.ip, INET_ADDRSTRLEN);
+            conn_info.server.port = ntohs(remote_addr.sin_port);
             // std::cout << "Server IP: " << conn_info.client.ip << ", Port: " << conn_info.client.port << std::endl;
 
             if (!isValidHttpMethod(request.method)) {
@@ -201,17 +244,17 @@ private:
                     if (FD_ISSET(client_fd, &fds)) {
                         bytes_read = recv(client_fd, buffer, BUFFER_SIZE, 0);
                         if (bytes_read <= 0) break;
-                        HttpRequest req = parseHttpRequest(buffer);
+                        // HttpRequest req = parseHttpRequest(buffer);
                         send(remote_fd, buffer, bytes_read, 0);
                     }
 
                     if (FD_ISSET(remote_fd, &fds)) {
                         bytes_read = recv(remote_fd, buffer, BUFFER_SIZE, 0);
                         if (bytes_read <= 0) break;
-                        response = parseHttpResponse(buffer);
+                        // response = parseHttpResponse(buffer);
                         send(client_fd, buffer, bytes_read, 0);
                     }
-                    conn_info.addTransaction(request, response);
+                    // conn_info.addTransaction(request, response);
                 }
             } else {
                 send(remote_fd, request.rawRequest.c_str(), request.rawRequest.size(), 0);
@@ -234,9 +277,9 @@ private:
                     if (bytes_read <= 0) {
                         break;
                     }
-                    response = parseHttpResponse(buffer);
+                    // response = parseHttpResponse(buffer);
                     send(client_fd, buffer, bytes_read, 0); 
-                    conn_info.addTransaction(request, response);
+                    // conn_info.addTransaction(request, response);
                 }
             }
             // std::lock_guard<std::mutex> lock(connections_mutex);
@@ -244,6 +287,7 @@ private:
             updateConnections(conn_info);
         } catch (const std::exception& e) {
             // Lưu thông tin kết nối
+            if (remote_fd != INVALID_SOCKET) CLOSE_SOCKET(remote_fd);
             CLOSE_SOCKET(client_fd);
             std::cerr << "Error handling client: " << e.what() << std::endl;
         }
@@ -252,40 +296,6 @@ private:
         CLOSE_SOCKET(client_fd);
     }
 
-    socket_t connectRemote(const HttpRequest& request, const std::string host) {
-        socket_t remote_socket = socket(AF_INET, SOCK_STREAM, 0);
-        if (remote_socket == INVALID_SOCKET) {
-            print_socket_error("Remote socket creation failed");
-            return -1;
-        }
-
-        sockaddr_in remote_addr;
-        remote_addr.sin_family = AF_INET;
-        remote_addr.sin_port = htons(request.isEncrypted ? 443 : 80);
-        struct hostent* remote_host = gethostbyname(host.c_str());
-
-        if (remote_host == nullptr) {
-            print_socket_error("Failed to resolve host address");
-            CLOSE_SOCKET(remote_socket);
-            return -1;
-        }
-        memcpy(&remote_addr.sin_addr, remote_host->h_addr, remote_host->h_length);
-        
-        if (unsigned(remote_host->h_length) > sizeof(remote_addr.sin_addr)) {
-            fprintf(stderr, "Invalid host address length\n");
-            CLOSE_SOCKET(remote_socket);
-            return -1;
-        }
-
-        if (connect(remote_socket, (struct sockaddr*)&remote_addr, sizeof(remote_addr)) < 0) {
-            print_socket_error("Connect to remote server failed");
-            CLOSE_SOCKET(remote_socket);
-            return -1;
-        }
-        // send(remote_socket, request.rawRequest.c_str(), request.rawRequest.size(), 0);
-
-        return remote_socket;
-    }
 };
 
 

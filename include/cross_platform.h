@@ -19,7 +19,10 @@
     // Type and macro definitions for Windows
     typedef SOCKET socket_t;
     #define SOCKET_ERROR_CODE WSAGetLastError()
-    #define CLOSE_SOCKET closesocket
+    #define CLOSE_SOCKET(fd) do {\
+        shutdown((fd), SD_BOTH); \
+        closesocket(fd); \
+    } while (0)
     #define INIT_SOCKET() do { \
         WSADATA wsaData; \
         if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) { \
@@ -44,7 +47,10 @@
     // Type and macro definitions for Linux
     typedef int socket_t;
     #define SOCKET_ERROR_CODE errno
-    #define CLOSE_SOCKET close
+    #define CLOSE_SOCKET(fd) do { \
+        shutdown((fd), SHUT_RDWR); \
+        close(fd); \
+    } while (0)
     #define INIT_SOCKET() (void)0
     #define CLEANUP_SOCKET() (void)0
     #define SETSOCKOPT(s, level, optname, optval, optlen) \

@@ -6,7 +6,7 @@
 struct HttpRequest {
     std::string rawRequest;
     std::string method;
-    std::string uri;
+    std::string url;
     std::string httpVersion;
     std::unordered_map<std::string, std::string> headers;
     std::string body;
@@ -47,6 +47,17 @@ struct ConnectionInfo {
     // Vector lưu tất cả request/response trong kết nối
     std::vector<Transaction> transactions;
     ConnectionInfo() : client(), server(), transactions() {}
+    void parseServerPort(HttpRequest request) {
+        size_t pos = request.url.find(':');
+        if (pos != std::string::npos) {
+            server.port = std::stoi(request.url.substr(pos + 1));
+        } else if (request.isEncrypted) {
+            server.port = 443; // Default port for HTTPS
+        } else {
+            server.port = 80; // Default port for HTTP
+        }
+    }
+
     void addTransaction(const HttpRequest& request, const HttpResponse& response);
     void printTransactions() const;
 };

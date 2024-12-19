@@ -15,7 +15,7 @@ void HttpRequest::addHeader(const std::string& key, const std::string& value) {
 }
 
 std::string HttpRequest::toString() const {
-    std::string request = method + " " + uri + " " + httpVersion + "\r\n";
+    std::string request = method + " " + url + " " + httpVersion + "\r\n";
     for (const auto& [key, value] : headers) {
         request += key + ": " + value + "\r\n";
     }
@@ -79,7 +79,7 @@ HttpRequest parseHttpRequest(const std::string& rawMessage) {
         // Parse dòng đầu tiên (Request Line)
         if (std::getline(stream, line)) {
             std::istringstream lineStream(line);
-            lineStream >> request.method >> request.uri >> request.httpVersion;
+            lineStream >> request.method >> request.url >> request.httpVersion;
             // Kiểm tra HTTPS
             if (request.httpVersion.find("HTTPS") != std::string::npos) {
                 request.isEncrypted = true;
@@ -192,7 +192,7 @@ std::string ConnectionInfoToString(const ConnectionInfo& connection) {
         const Transaction& transaction = connection.transactions[i];
         oss << "Transaction " << i + 1 << ":\n";
         oss << "  Request Method: " << transaction.request.method << "\n";
-        oss << "  Request URI: " << transaction.request.uri << "\n";
+        oss << "  Request url: " << transaction.request.url << "\n";
         oss << "  Request HTTP Version: " << transaction.request.httpVersion << "\n\n";
         oss << "  Response Status Code: " << transaction.response.statusCode << "\n";
         oss << "  Response Reason: " << transaction.response.reasonPhrase << "\n\n";
