@@ -20,7 +20,7 @@ std::string readFile(const char* filename) {
 
     std::string fileContent = buffer.str();
 
-    return fileContent;
+    return fileContent; 
 }
 
 
