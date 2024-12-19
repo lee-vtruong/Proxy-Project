@@ -4,18 +4,19 @@ INCLUDES = -Iinclude
 TARGET = proxy
 
 ifeq ($(OS),Windows_NT)
-    LDFLAGS = -Llib -lraylib -lopengl32 -lgdi32 -lwinmm -lws2_32 
+    LDFLAGS = -Llib\Window -lraylib -lopengl32 -lgdi32 -lwinmm -lws2_32
     RM = del
     EXE = .exe
-	SRC = src\main.cpp src\http_parser.cpp src\domain_process.cpp
-	# SRC = src\domain_process.cpp src\http_parser.cpp src\proxy.cpp
-else
-    LDFLAGS = -Llib -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+    SRC = src\main.cpp src\http_parser.cpp src\domain_process.cpp
+else 
     RM = rm -f
     EXE =
-	SRC = src/main.cpp src/http_parser.cpp src/domain_process.cpp
-	# SRC = src/main.cpp
-	# SRC = src/domain_process.cpp src/http_parser.cpp src/proxy.cpp
+    SRC = src/main.cpp src/http_parser.cpp src/domain_process.cpp
+    ifeq ($(OS), Darwin)
+        LDFLAGS = -Llib/MacOS -lraylib -framework OpenGL -framework Cocoa -framework IOKit -framework coreVideo
+    else
+        LDFLAGS = -Llib/Linux -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+    endif
 endif
 
 OBJ = $(SRC:.cpp=.o)
