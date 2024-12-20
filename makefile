@@ -21,7 +21,7 @@ endif
 
 OBJ = $(SRC:.cpp=.o)
 
-all: $(TARGET)$(EXE)
+all: $(TARGET)$(EXE) 
 
 $(TARGET)$(EXE): $(OBJ)
 	$(CC) -o $@ $^ $(LDFLAGS)

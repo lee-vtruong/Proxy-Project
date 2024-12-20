@@ -170,7 +170,7 @@ Proxy-Project/
    ./proxy
    ```
 
-## Cấu hình
+## Cấu hình 
 
 - **Cài đặt chặn**:
   Chỉnh sửa các tệp trong thư mục `asset/`:

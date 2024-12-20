@@ -17,7 +17,7 @@
 *     - Angles are always in radians (DEG2RAD/RAD2DEG macros provided for convenience)
 *     - No compound literals used to make sure libray is compatible with C++
 *
-*   CONFIGURATION:
+*   CONFIGURATION: 
 *       #define RAYMATH_IMPLEMENTATION
 *           Generates the implementation of the library into the included file.
 *           If not defined, the library is in header only mode and can be included in other headers

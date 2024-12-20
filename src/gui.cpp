@@ -20,7 +20,7 @@ void Button::Draw() {
     Color currentColor = baseColor, currentTextColor = textColor;
     if (isPressed) {
         currentColor = pressColor;
-        currentTextColor = hoverTextColor;
+        currentTextColor = hoverTextColor; 
     } else if (isHovered) {
         currentColor = hoverColor;
         currentTextColor = hoverTextColor;

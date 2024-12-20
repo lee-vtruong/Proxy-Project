@@ -22,7 +22,7 @@ void Proxy::setupServerSocket() {
 
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = htons(port);
+    server_addr.sin_port = htons(port); 
 
     if (bind(server_fd, (sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
         print_socket_error(ANSI_RED "ERROR(Proxy::setupServerSocket):" ANSI_RESET " Bind failed");

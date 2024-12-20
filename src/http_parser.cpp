@@ -21,7 +21,7 @@ std::string HttpRequest::getHeader(const std::string& key) {
     if (it != headers.end()) { 
         std::string headerValue = it->second;
 
-        size_t pos = headerValue.find(':');
+        size_t pos = headerValue.find(':'); 
         if (pos != std::string::npos) {
             if (headerValue.substr(pos + 1) == "443") {
                 isEncrypted = true; 

@@ -8,7 +8,7 @@
 // WARNING: Those flags avoid inclusion of some Win32 headers that could be required
 // by user at some point and won't be included...
 //-------------------------------------------------------------------------------------
-
+ 
 // If defined, the following flags inhibit definition of the indicated items.
 #define NOGDICAPMASKS     // CC_*, LC_*, PC_*, CP_*, TC_*, RC_
 #define NOVIRTUALKEYCODES // VK_*

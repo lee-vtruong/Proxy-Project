@@ -18,7 +18,7 @@
 *          - Default texture (RLGL.defaultTextureId): 1x1 white pixel R8G8B8A8
 *          - Default shader (RLGL.State.defaultShaderId, RLGL.State.defaultShaderLocs)
 *
-*       Internal buffer (and resources) must be manually unloaded calling rlglClose()
+*       Internal buffer (and resources) must be manually unloaded calling rlglClose() 
 *
 *   CONFIGURATION:
 *       #define GRAPHICS_API_OPENGL_11

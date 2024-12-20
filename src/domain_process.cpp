@@ -21,7 +21,7 @@ bool FilterList::isBlocked(const std::string& entry) const {
     }
     for (const auto& ip : ips) {
         std::string res;
-        size_t end = entry.find_last_not_of("\r\n");
+        size_t end = entry.find_last_not_of("\r\n"); 
         if (end != std::string::npos) {
             res = entry.substr(0, end + 1);
         } else {

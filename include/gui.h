@@ -186,7 +186,7 @@ public:
     void SetText(const std::string& newText);
 };
 
-
+ 
 class NameList {
 private:
     std::string fileName;

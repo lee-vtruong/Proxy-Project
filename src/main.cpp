@@ -20,7 +20,7 @@ int main() {
     NameList blockedDomain(domainFile, 950, 350, 600, 200, proxy.BLACK_LIST.domains, customFont, "Blocked Domain List");
     NameList blockedIp(ipFile, 950, 125, 600, 200, proxy.BLACK_LIST.ips, customFont, "Blocked IP List");
 
-    InputFieldWithButton portButton(150, 135, 100, 30, "Change Port", 300, 130, 150, 40, customFont);
+    InputFieldWithButton portButton(150, 135, 100, 30, "Change Port", 300, 130, 150, 40, customFont); 
     portButton.SetText(std::to_string(proxy.getPort()));
 
     ToggleButton startButton(550, 125, 200, 50, "Stop Proxy", "Start Proxy", 20, 10.0f, customFont, PRIMARY_BUTTON_COLOR, PRIMARY_HOVERED_BUTTON_COLOR, PRESS_COLOR, WHITE, WHITE);

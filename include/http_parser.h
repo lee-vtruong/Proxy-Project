@@ -11,7 +11,7 @@ struct HttpRequest {
     std::unordered_map<std::string, std::string> headers;
     std::string body;
     bool isEncrypted = false;
-
+ 
     void addHeader(const std::string& key, const std::string& value);
     std::string getHeader(const std::string& key);
     std::string toString() const;
