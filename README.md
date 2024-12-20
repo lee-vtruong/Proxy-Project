@@ -60,7 +60,7 @@ Proxy-Project/
 
 1. **Clone the Repository**:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/NgTrongDoanh/Proxy-Project.git
    cd Proxy-Project
    ```
 
@@ -155,7 +155,7 @@ Proxy-Project/
 
 1. **Sao chép kho lưu trữ**:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/NgTrongDoanh/Proxy-Project.git
    cd Proxy-Project
    ```
 
