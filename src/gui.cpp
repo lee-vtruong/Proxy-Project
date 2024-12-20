@@ -541,11 +541,10 @@ void InputFieldWithButton::SetText(const std::string& newText) {
 NameList::NameList(std::string filename, float x, float y, float width, float height, 
                    std::unordered_set<std::string>& names, Font customFont, 
                    const std::string& titleText, int textSize, int rowSpacing)
-    : title(titleText), fileName(filename), nameSet(names), bounds{x, y, width, height - 50}, 
-      bounds_d{x, y + rowHeight, width, height - rowHeight - 50}, 
+    : fileName(filename), bounds{x, y, width, height - 50}, nameSet(names), font(customFont),
       inputFieldWithButton(x + 10, y + height - 40, width - 120, 30, "Add", x + width - 100, y + height - 40, 90, 30, customFont, NORMAL_BUTTON_COLOR, SECONDARY_HOVERED_BUTTON_COLOR),
-      selectedNameIndex(-1), showContextMenu(false), contextMenuPosition{0, 0},
-      scrollOffset(0.0f), font(customFont), fontSize(textSize), lineSpacing(rowSpacing)
+      showContextMenu(false), contextMenuPosition{0, 0}, selectedNameIndex(-1), scrollOffset(0.0f), title(titleText),
+      bounds_d{x, y + rowHeight, width, height - rowHeight - 50}, fontSize(textSize), lineSpacing(rowSpacing) 
     {
         UpdateNameVector();
         visibleRows = bounds.height / (fontSize + lineSpacing);
@@ -561,6 +560,7 @@ void NameList::Update() {
             float scrollSpeed = rowHeight; 
             scrollOffset -= mouseWheelMove * scrollSpeed;
         }
+
         float maxScroll = std::max(0.0f, (nameVector.size() + 1) * rowHeight - bounds.height);
         scrollOffset = Clamp(scrollOffset, 0.0f, maxScroll);
     }
@@ -635,7 +635,7 @@ void NameList::HandleContextMenu(Vector2 mousePoint) {
             UpdateNameVector();
             showContextMenu = false;
         } else {
-            showContextMenu = false; 
+            showContextMenu = false;
         }
     }
 }
@@ -665,8 +665,8 @@ void NameList::Draw() {
     if (maxScroll > 0) {
         float scrollBarHeight = (bounds.height - rowHeight) * (bounds.height - rowHeight) / (nameVector.size() * rowHeight);
         float scrollBarY = bounds.y + rowHeight + ((bounds.height - rowHeight - scrollBarHeight) * (scrollOffset / maxScroll));
-        DrawRectangle(bounds.x + bounds.width - 5, bounds.y + rowHeight, 5, bounds.height - rowHeight, DARKGRAY); 
-        DrawRectangle(bounds.x + bounds.width - 5, scrollBarY, 5, scrollBarHeight, BLACK); 
+        DrawRectangle(bounds.x + bounds.width - 5, bounds.y + rowHeight, 5, bounds.height - rowHeight, DARKGRAY); // Nền thanh cuộn
+        DrawRectangle(bounds.x + bounds.width - 5, scrollBarY, 5, scrollBarHeight, BLACK); // Thanh cuộn
     }
 
     inputFieldWithButton.Draw();
@@ -689,4 +689,5 @@ void NameList::UpdateNameVector() {
     nameVector = std::vector<std::string>(nameSet.begin(), nameSet.end());
     std::sort(nameVector.begin(), nameVector.end());
 }
+
 

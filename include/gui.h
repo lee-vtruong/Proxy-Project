@@ -189,27 +189,27 @@ public:
 
 class NameList {
 private:
-    std::string title;                                  //
-    std::string fileName;                               //
-    std::unordered_set<std::string>& nameSet;           //
-    std::vector<std::string> nameVector;                //
-    Rectangle bounds;                                   //
-    Rectangle bounds_d;                                 //
-    InputFieldWithButton inputFieldWithButton;          //
-    int selectedNameIndex;                              //
-    bool showContextMenu;                               //
-    Vector2 contextMenuPosition;                        //
-    const float rowHeight = 30;                         //
-    int visibleRows;                                    //
-    float scrollOffset;                                 //
-    Font font;                                          //
-    int fontSize;                                       //
-    int lineSpacing;                                    //
+    std::string fileName;
+    Rectangle bounds;
+    std::unordered_set<std::string>& nameSet;
+    Font font;
+    InputFieldWithButton inputFieldWithButton; 
+    bool showContextMenu;
+    Vector2 contextMenuPosition;
+    int selectedNameIndex;
+    float scrollOffset; 
+    std::string title;
+    std::vector<std::string> nameVector;
+    const float rowHeight = 30; 
+    int visibleRows; 
+    Rectangle bounds_d;
+    int fontSize;
+    int lineSpacing;
 public:
     NameList(std::string filename, float x, float y, float width, float height, 
              std::unordered_set<std::string>& names, Font customFont,
-             const std::string& titleText, int textSize = 20, int rowSpacing = 5.0f);
-
+             const std::string& titleText, int textSize = 20, int rowSpacing = 5.0f);  
+    
     void Update();
     void HandleScrollBar(Vector2 mousePosition);
     void HandleContextMenu(Vector2 mousePoint);
