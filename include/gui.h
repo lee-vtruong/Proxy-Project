@@ -88,7 +88,6 @@ private:
     Color backgroundColor;          // 
     Color borderColor;              //
     Color titleBarColor;            // 
-    Color textColor;                // 
     std::string title;              // 
     TextBox contentBox;             // 
     float cornerRadius;             // 

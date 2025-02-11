@@ -1,5 +1,5 @@
 -------------------------- TEAM MEMBERS --------------------------
-    1. Nguyen Trong Doanh - 23120004                                                                                                
-    3. Nguyen Le Khanh    - 23120052                                                                                                      
-    2. Le Van Truong      - 23120181                                                                                                   
+    1. Nguyen Trong Doanh - 23120004
+    2. Nguyen Le Khanh    - 23120052
+    3. Le Van Truong      - 23120181
 -------------------------------------------------------------------

@@ -198,7 +198,7 @@ Popup::Popup(float x, float y, float width, float height, const std::string& tit
              const std::string& content, Font customFont, int textSize, float radius, 
              Color bg, Color border, Color titleColor, Color textCol)
     : bounds{ x, y, width, height }, backgroundColor(bg), borderColor(border),
-      titleBarColor(titleColor), textColor(textCol), title(titleText),
+      titleBarColor(titleColor), title(titleText),
       contentBox(x + 10, y + 40, width - 20, height - 50, content, customFont, textSize, radius - 2, bg, border, textCol),
       cornerRadius(radius), isDragging(false), isVisible(true), font(customFont) {}
 
