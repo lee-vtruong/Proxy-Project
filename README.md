@@ -33,43 +33,43 @@ The project includes the following key features:
 ## Project Structure
 
 The project is organized into the following main files and directories:
-Use code with caution.
-Markdown
+```
 Proxy-Project/
 ├── README.md
-├── makefile # Script to build the project
-├── proxy # Compiled executable
-├── asset/ # Assets like fonts and configuration files
-│ ├── Consolas.ttf # Font file for the GUI
-│ ├── blocked_domains.txt # List of domains to block
-│ ├── blocked_ips.txt # List of IP addresses to block
-│ ├── instruction.txt # Potential instructions or usage info
-│ └── project-creator.txt # Information about the project creator(s)
-├── include/ # Header files
-│ ├── gui.h
-│ ├── common_lib.h
-│ ├── cross_platform.h
-│ ├── domain_process.h
-│ ├── http_parser.h
-│ ├── netinc.h # Networking includes (potentially platform-dependent)
-│ ├── proxy.h # Main proxy logic header
-│ ├── raylib.h # Raylib graphics library header
-│ ├── raymath.h # Raylib math utilities header
-│ └── rlgl.h # Raylib graphics layer header
-├── lib/ # Precompiled Raylib libraries for different platforms
-│ ├── Linux/
-│ │ └── libraylib.a
-│ ├── MacOS/
-│ │ └── libraylib.dylib
-│ └── Window/
-│ └── libraylib.a
-└── src/ # Source code files
-├── gui.cpp # GUI implementation
-├── domain_process.cpp # Logic for processing domain/IP blocking
-├── http_parser.cpp # HTTP parsing logic
-├── main.cpp # Entry point of the application
-├── netimpl.cpp # Network implementation details (sockets etc.)
-└── proxy.cpp # Core proxy handling logic
+├── makefile
+├── proxy
+├── asset/
+│   ├── Consolas.ttf
+│   ├── blocked_domains.txt
+│   ├── blocked_ips.txt
+│   ├── instruction.txt
+│   └── project-creator.txt
+├── include/
+│   ├── gui.h
+│   ├── common_lib.h
+│   ├── cross_platform.h
+│   ├── domain_process.h
+│   ├── http_parser.h
+│   ├── netinc.h
+│   ├── proxy.h
+│   ├── raylib.h
+│   ├── raymath.h
+│   └── rlgl.h
+├── lib/
+│   ├── Linux/
+│   │   └── libraylib.a
+│   ├── MacOS/
+│   │   └── libraylib.dylib
+│   └── Window/
+│       └── libraylib.a
+└── src/
+    ├── gui.cpp
+    ├── domain_process.cpp
+    ├── http_parser.cpp
+    ├── main.cpp
+    ├── netimpl.cpp
+    └── proxy.cpp
+```
 ## Prerequisites
 
 Before building and running the project, ensure you have the following installed:
