@@ -135,8 +135,8 @@ If you'd like to contribute to this project, please follow these steps:
 
 ## Team Members
 
-- Nguyễn Trọng Doanh
 - Lê Văn Trường
+- Nguyễn Trọng Doanh
 - Nguyễn Lê Khánh
 
 ---
